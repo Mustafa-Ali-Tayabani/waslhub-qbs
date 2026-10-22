@@ -42,7 +42,7 @@ Use the IDs as node names.
 | S19 | Payment Insight | 06 Payment Insight | Aging buckets, payments list, remittance download. |
 | S20 | Notifications | 07 Notifications | In-app list plus email template preview. |
 | S21 | Profile | 07 Profile | Read-only supplier data, request change, portal users. |
-| S22 | Documentation | 07 Documentation | Short guides linking into the flows. |
+| S22 | Documentation | 07 Documentation | Nine in-app guides (getting started, invoice, credit memo, standalone, statuses, blocked reasons, payments, users, formats) with a button into the related screen. |
 
 ### Tenant Admin
 
@@ -139,10 +139,11 @@ flowchart TD
   S20 -->|notification| S15
   S20 -->|notification| S13
   S20 -->|notification| S19
-  S22 -->|guide| S16
-  S22 -->|guide| S12
-  S22 -->|guide| S19
-  S22 -->|guide| S21
+  S22 -->|guide button| S16
+  S22 -->|guide button| S12
+  S22 -->|guide button| S19
+  S22 -->|guide button| S21
+  S22 -->|Getting started| S06
 ```
 
 ### 4a. Create Invoice / Credit Memo wizard (S16)
@@ -363,7 +364,7 @@ erDiagram
 | S19 | Row | S18 |
 | S20 | Notification | S18 / S14 / S15 / S13 / S19 |
 | S21 | Request change → Send request | confirmation |
-| S22 | Guide | S16 / S12 / S19 / S21 |
+| S22 | Guide → button | S16 / S17 / S12 / S19 / S21 / S06 (invitation email) |
 | A03 | Invite supplier | Invite step 1 → 2 → 3 → A03 |
 | A03 | Row action | A03 (access state changes) |
 | A04 | KPI Blocked / Stuck | A04 queue filtered |
