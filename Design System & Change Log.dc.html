@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;display=block">
+<style>
+body{margin:0;background:#F4F5F7;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#0B4F9C;text-decoration:none}
+a:hover{text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Figtree',system-ui,sans-serif;color:#16202E;background:#F4F5F7;min-height:100vh;font-size:14px;line-height:1.5;padding:48px 40px 80px;display:flex;flex-direction:column;gap:56px;max-width:1520px;margin:0 auto">
+
+  <section data-screen-label="00 Cover" style="display:flex;flex-direction:column;gap:16px">
+    <span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5B6472">WaslHub · Supplier Invoicing Portal · S/4HANA multi-tenant redesign</span>
+    <h1 style="margin:0;font-size:48px;line-height:1.05;font-weight:800;letter-spacing:-.02em;max-width:900px;text-wrap:pretty">Components, theme tokens &amp; change log</h1>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="Supplier Portal.dc.html" style="height:40px;padding-inline:16px;border-radius:8px;background:#0B4F9C;color:#FFFFFF;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none"><span style="font-family:'Material Symbols Outlined';font-size:20px">play_arrow</span>Supplier prototype</a>
+      <a href="Tenant Admin.dc.html" style="height:40px;padding-inline:16px;border-radius:8px;background:#FFFFFF;border:1px solid #D5D9E0;color:#16202E;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none"><span style="font-family:'Material Symbols Outlined';font-size:20px">admin_panel_settings</span>Tenant admin prototype</a>
+    </div>
+  </section>
+
+  <section data-screen-label="09 Status Tags" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:28px;font-weight:700">Status tags</h2><p style="margin:0;color:#5B6472;max-width:760px">One component, 22 variants. Colours are fixed semantic tokens, independent of the tenant brand, so a tenant colour can never collide with a status. Every tag has an icon, so colour is never the only signal. Hover any tag for its tooltip.</p></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+      <sc-for list="{{ groups }}" as="g" hint-placeholder-count="4">
+        <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column"><b style="font-size:16px">{{ g.name }}</b><span style="font-size:12px;color:#5B6472">{{ g.note }}</span></div>
+          <sc-for list="{{ g.items }}" as="s" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;align-items:center;padding-top:8px;border-top:1px solid #EEF0F3"><dc-import name="StatusTag" status="{{ s.k }}" hint-size="150px,24px"></dc-import><span style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5B6472">{{ s.k }}</span></div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section data-screen-label="09 Theme Tokens" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:28px;font-weight:700">Theme tokens</h2><p style="margin:0;color:#5B6472;max-width:760px">Tenants set one value — <b>brand</b>. The rest are derived: on-brand text flips to dark when white fails 4.5:1, and brand-text is darkened until it passes 4.5:1 on white. Swapping a theme is a token swap.</p></div>
+    <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;overflow-x:auto">
+      <table style="width:100%;min-width:820px;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#F9FAFB;font-size:12px;color:#3A4350"><th style="padding:12px 16px;text-align:start">Token</th><th style="padding:12px 16px;text-align:start">Use</th><th style="padding:12px 16px;text-align:start">WaslHub default</th><th style="padding:12px 16px;text-align:start">Alternate tenant</th></tr></thead>
+        <tbody><sc-for list="{{ tokens }}" as="k" hint-placeholder-count="6"><tr style="border-top:1px solid #EEF0F3">
+          <td style="padding:12px 16px;font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ k.name }}</td><td style="padding:12px 16px;color:#3A4350">{{ k.use }}</td>
+          <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:28px;height:28px;border-radius:6px;background:{{ k.a }};border:1px solid #D5D9E0"></span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ k.a }}</span></span></td>
+          <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:28px;height:28px;border-radius:6px;background:{{ k.b }};border:1px solid #D5D9E0"></span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ k.b }}</span></span></td>
+        </tr></sc-for></tbody>
+      </table>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+      <sc-for list="{{ themeCards }}" as="c" hint-placeholder-count="2">
+        <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <b>{{ c.label }}</b>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <span style="height:40px;padding-inline:16px;border-radius:8px;background:{{ c.brand }};color:{{ c.on }};font-weight:700;display:inline-flex;align-items:center">Primary button</span>
+            <span style="height:40px;padding-inline:16px;border-radius:8px;border:1px solid {{ c.brand }};color:{{ c.text }};font-weight:700;display:inline-flex;align-items:center">Secondary</span>
+            <span style="height:32px;padding-inline:12px;border-radius:8px;background:{{ c.tint }};color:{{ c.text }};font-weight:700;display:inline-flex;align-items:center">Active nav</span>
+            <span style="color:{{ c.text }};font-weight:700">Text link</span>
+          </div>
+          <span style="font-size:12px;color:#5B6472">{{ c.ratios }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section data-screen-label="09 Theme Demo" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:28px;font-weight:700">Theme demo</h2><p style="margin:0;color:#5B6472">Live prototype screens at 1440 px, scaled. Same build, two tenants.</p></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,692px);gap:20px">
+      <sc-for list="{{ demos }}" as="d" hint-placeholder-count="6">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:700">{{ d.label }}</span>
+          <div style="position:relative;width:692px;height:433px;overflow:hidden;border-radius:12px;border:1px solid #D5D9E0;background:#FFFFFF">
+            <div style="position:absolute;top:0;left:0;width:1440px;height:900px;transform:scale(0.48);transform-origin:top left;overflow:hidden;pointer-events:none">
+              <dc-import name="Supplier Portal" theme="{{ d.theme }}" start-screen="{{ d.screen }}" show-prototype-dock="{{ false }}" hint-size="1440px,900px"></dc-import>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section data-screen-label="09 Formatting Rules" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:28px;font-weight:700">Amounts, dates &amp; SAP keys</h2></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px"><b>Currency decimals come from SAP</b>
+        <sc-for list="{{ amounts }}" as="a" hint-placeholder-count="7"><div style="display:grid;grid-template-columns:60px minmax(0,1fr) 30px;gap:10px;padding-top:6px;border-top:1px solid #EEF0F3;font-variant-numeric:tabular-nums"><b>{{ a.c }}</b><span style="text-align:end">{{ a.v }}</span><span style="font-size:12px;color:#5B6472">{{ a.d }}</span></div></sc-for>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px"><b>Date formats (tenant setting)</b>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:6px;font-variant-numeric:tabular-nums"><span>DD-MMM-YYYY <span style="font-size:11px;color:#5B6472">default</span></span><b>28-Aug-2025</b><span>DD MMM YYYY</span><b>28 Aug 2025</b><span>MMM DD, YYYY</span><b>Aug 28, 2025</b><span>YYYY-MM-DD</span><b>2025-08-28</b></div>
+        <span style="font-size:12px;color:#5B6472">Ambiguous numeric formats (08/09/2025) are not offered.</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px"><b>SAP document keys</b>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:6px;font-variant-numeric:tabular-nums"><span>Purchase order</span><b>4500012345</b><span>PO item</span><b>00010</b><span>Material document (GR)</span><b>5000004567 / 2025</b><span>Service entry sheet</span><b>1000000456</b><span>Supplier invoice</span><b>5105600123 / 2025</b><span>Clearing document</span><b>1500000789</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="00 Change Log" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:28px;font-weight:700">Change log vs. SAP Business One single-client version</h2></div>
+    <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;overflow:hidden">
+      <sc-for list="{{ changes }}" as="c" hint-placeholder-count="12">
+        <div style="display:grid;grid-template-columns:180px minmax(0,1fr) minmax(0,1fr);gap:20px;padding:14px 18px;border-bottom:1px solid #EEF0F3">
+          <b style="font-size:13px">{{ c.area }}</b>
+          <span style="font-size:13px;color:#7A828E;text-decoration:line-through;text-decoration-color:#C9CED6">{{ c.before }}</span>
+          <span style="font-size:13px;color:#16202E">{{ c.after }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section data-screen-label="00 Acceptance" style="display:flex;flex-direction:column;gap:18px">
+    <h2 style="margin:0;font-size:28px;font-weight:700">Acceptance checklist</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:10px">
+      <sc-for list="{{ checks }}" as="c" hint-placeholder-count="8"><div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:#FFFFFF;border:1px solid #E3E6EB;border-radius:10px"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#1D6B2E">check_circle</span><span style="display:flex;flex-direction:column"><b style="font-size:13px">{{ c.t }}</b><span style="font-size:12px;color:#5B6472">{{ c.d }}</span></span></div></sc-for>
+    </div>
+  </section>
+
+  <footer style="font-size:12px;color:#5B6472">Powered by WaslHub · Designed &amp; Developed by QBSCO</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+function hx(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.substr(i,2),16)||0);}
+function th(a){return '#'+a.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');}
+function mix(a,b,t){const x=hx(a),y=hx(b);return th(x.map((v,i)=>v+(y[i]-v)*t));}
+function lum(h){return hx(h).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}).reduce((s,v,i)=>s+v*[0.2126,0.7152,0.0722][i],0);}
+function cr(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+function tv(b){const on=cr(b,'#FFFFFF')>=4.5?'#FFFFFF':'#14181F';let text=b,t=0;while(cr(text,'#FFFFFF')<4.5&&t<1){t+=0.05;text=mix(b,'#000000',t);}return{brand:b,on,text,tint:mix(b,'#FFFFFF',0.9),tint2:mix(b,'#FFFFFF',0.8),line:mix(b,'#FFFFFF',0.55)};}
+class Component extends DCLogic {
+  renderVals(){
+    const A=tv('#0B4F9C'),B=tv('#E3A008');
+    const G=[['Invoice / Credit Memo','Draft → Submitted → Parked in SAP (optional) → Under Review → Posted → Scheduled → Paid, plus exceptions',['inv_draft','inv_submitted','inv_parked','inv_review','inv_posted','inv_scheduled','inv_paid','inv_returned','inv_rejected','inv_blocked','inv_reversed']],['Purchase Order','Replaces “Active / Completed”',['po_open','po_partdel','po_fullydel','po_partinv','po_fullyinv','po_closed']],['Goods Receipt (material lines)','Material document, own lifecycle',['gr_posted','gr_reversed']],['Service Entry Sheet (service lines)','Separate SAP object with acceptance',['ses_pending','ses_accepted','ses_rejected']]];
+    const fmt=(n,d)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+    const C=[
+     ['Product model','Built for one client on SAP Business One','Multi-tenant, client-agnostic product for SAP S/4HANA tenants; Supplier and Tenant Admin roles'],
+     ['Branding','Client logo, poultry imagery and fixed blue on login','Tenant logo, colour, welcome text and illustration from settings; “Powered by WaslHub” footer; contrast-safe derived tokens'],
+     ['Login','Pre-filled email/password; “By signing up…”','Empty fields with placeholders; “By logging in, you agree to the Terms of Service and Data Processing Agreement”; OTP, reset, activation, expired invite'],
+     ['Statuses','Active / Completed','Full PO, GR, SES and invoice models with exceptions, icons and tooltips; parking step switchable'],
+     ['Documents','B1 documents; GR and services mixed','S/4 PO lines, GR material documents and SES as separate objects; “Number / Fiscal Year” keys'],
+     ['Create invoice','Single form','4-step PO-based flow: lines limited to open received/accepted qty, inline price/qty pre-checks from tenant tolerances, mandatory PDF, draft at every step'],
+     ['Exceptions','No blocked/returned handling','Reason panel for Price, Quantity and Date Variance, Missing Goods Receipt and Manual Block, each with the required action, upload corrected invoice and resubmit'],
+     ['Amounts','Fixed currency; 2 decimals','Currency per SAP document; 2- and 3-decimal support; Net, Tax, Gross always shown; per-currency totals'],
+     ['Tax','Hard-coded rate','Tax codes from SAP per company code'],
+     ['Dates','Numeric formats','Tenant date format, default DD-MMM-YYYY; date fields are typed and validated in that format, no native numeric pickers'],
+     ['Lists','“Payment - All” frame naming; duplicate global and table search; static tables','Renamed; one search; tabs, filters incl. amount range, CSV/Excel export; sort indicators, pagination and empty/loading/error states on every list: workflow, payments, notifications, PO documents and all Tenant Admin tables'],
+     ['SAP sync','Not shown','“Last synced with SAP” on every SAP screen plus a sync-failed retry state in both the supplier portal and Tenant Admin'],
+     ['Payments','Colombian payment data, “Mastarcard”','Payment Insight with aging buckets, WHT, clearing document, method and remittance download'],
+     ['Profile','Editable supplier data','Read-only from SAP, masked bank account, “Request change”, supplier-managed sub-users'],
+     ['Admin','None','Tenant settings, SAP connection, supplier management with invite flow, monitoring, admin roles'],
+     ['File hygiene','Spanish layers (tabla_blanco, Etiqueta), template layers, previous client assets','Removed; pages 00–09; frames named by content; tokens as variables'],
+     ['Terminology','Mixed “Login/Log In”, “Design & Developed”','“Log in” (verb) / “Login” (noun), “Supplier Workflow”, “Designed & Developed by QBSCO”'],
+     ['Layout','LTR only','RTL-ready with logical properties and mirrored chevrons; text allows longer translations']];
+    const K=[['No client content','No client name, logo, industry imagery, fixed currency or tax rate.'],['No “Active / Completed”','Replaced by S/4 status models.'],['Dates and amounts','Tenant date format; 2- and 3-decimal currencies, right-aligned.'],['Net, Tax, Gross','Shown on every invoice, list, review and email.'],['GR and SES separated','Distinct objects, icons, details and statuses.'],['Blocked and Returned','Reason, required action and resubmit.'],['Alternate theme','Light amber brand passes via auto on-brand and link tokens.'],['No dummy layers','Neutral, sequential sample data only.'],['Prototype-only controls','Login hints, link simulators and the prototype dock disappear when the dock is switched off.']];
+    return{
+      groups:G.map(g=>({name:g[0],note:g[1],items:g[2].map(k=>({k}))})),
+      tokens:[['--brand','Primary buttons, auth panel, selected states',A.brand,B.brand],['--on-brand','Text/icons on brand',A.on,B.on],['--brand-text','Links, active nav text, brand-coloured text on white',A.text,B.text],['--brand-tint','Active nav, selected rows, chips',A.tint,B.tint],['--brand-tint2','Hover on tinted surfaces',A.tint2,B.tint2],['--brand-line','Focus rings, light dividers',A.line,B.line]].map(r=>({name:r[0],use:r[1],a:r[2],b:r[3]})),
+      themeCards:[['WaslHub default · #0B4F9C',A],['Alternate tenant · #E3A008',B]].map(([l,t])=>({label:l,brand:t.brand,on:t.on,text:t.text,tint:t.tint,ratios:`Button text ${cr(t.brand,t.on).toFixed(1)}:1 · Link ${cr(t.text,'#FFFFFF').toFixed(1)}:1 · Active nav ${cr(t.text,t.tint).toFixed(1)}:1`})),
+      demos:[['Login · WaslHub default','WaslHub default','login'],['Login · Alternate tenant','Alternate tenant','login'],['Dashboard · WaslHub default','WaslHub default','dashboard'],['Dashboard · Alternate tenant','Alternate tenant','dashboard'],['Create Invoice · WaslHub default','WaslHub default','create'],['Create Invoice · Alternate tenant','Alternate tenant','create']].map(d=>({label:d[0],theme:d[1],screen:d[2]})),
+      amounts:[['USD',4410,2],['PKR',1250000,2],['SAR',11270,2],['AED',3672.5,2],['OMR',787.5,3],['KWD',1226.25,3],['BHD',433.388,3]].map(a=>({c:a[0],v:fmt(a[1],a[2]),d:a[2]+' dp'})),
+      changes:C.map(c=>({area:c[0],before:c[1],after:c[2].replace('&amp;','&')})),
+      checks:K.map(k=>({t:k[0],d:k[1]}))};
+  }
+}
+</script>
+</body>
+</html>

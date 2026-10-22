@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<span style="display:inline-flex;vertical-align:middle" onMouseEnter="{{ enter }}" onMouseLeave="{{ leave }}">
+  <span style="display:inline-flex;align-items:center;gap:5px;height:24px;padding-inline:7px 10px;border-radius:999px;font-family:'Figtree',system-ui,sans-serif;font-weight:600;font-size:12px;line-height:1;white-space:nowrap;background:{{ bg }};color:{{ fg }};border:{{ border }};box-sizing:border-box;cursor:default">
+    <span style="font-family:'Material Symbols Outlined';font-size:15px;line-height:1;font-weight:400">{{ icon }}</span>
+    <span>{{ label }}</span>
+  </span>
+  <sc-if value="{{ show }}" hint-placeholder-val="{{ false }}">
+    <span style="position:fixed;left:{{ x }}px;top:{{ y }}px;z-index:1000;width:264px;padding:10px 12px;border-radius:8px;background:#16202E;color:#FFFFFF;font-family:'Figtree',system-ui,sans-serif;font-size:12px;line-height:1.45;box-shadow:0 8px 24px rgba(10,20,40,.22);display:flex;flex-direction:column;gap:4px;white-space:normal;text-align:start">
+      <span style="font-weight:700">{{ label }}</span>
+      <span style="color:#D3D8E0">{{ meaning }}</span>
+      <span style="color:#FFFFFF"><b>Your action:</b> {{ action }}</span>
+    </span>
+  </sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;240px&quot;,&quot;height&quot;:&quot;60px&quot;},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inv_draft&quot;,&quot;inv_submitted&quot;,&quot;inv_parked&quot;,&quot;inv_review&quot;,&quot;inv_posted&quot;,&quot;inv_scheduled&quot;,&quot;inv_paid&quot;,&quot;inv_returned&quot;,&quot;inv_rejected&quot;,&quot;inv_blocked&quot;,&quot;inv_reversed&quot;,&quot;po_open&quot;,&quot;po_partdel&quot;,&quot;po_fullydel&quot;,&quot;po_partinv&quot;,&quot;po_fullyinv&quot;,&quot;po_closed&quot;,&quot;gr_posted&quot;,&quot;gr_reversed&quot;,&quot;ses_pending&quot;,&quot;ses_accepted&quot;,&quot;ses_rejected&quot;],&quot;default&quot;:&quot;inv_blocked&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const S={
+inv_draft:['Draft','#4A5361','#EEF0F3','edit_note','Saved in the portal only. Not sent to the buyer yet.','Complete the invoice and submit it.'],
+inv_submitted:['Submitted','#1F4E8C','#E7EEF8','send','Received by the portal and queued for SAP.','None. Wait for SAP to create the document.'],
+inv_parked:['Parked in SAP','#4338A8','#ECEBFB','pause_circle','Recorded in SAP as a parked document while AP checks it.','None.'],
+inv_review:['Under Review','#8A5300','#FDF1DC','manage_search','AP is checking the invoice against the PO and receipts.','None, unless AP contacts you.'],
+inv_posted:['Posted','#0B6B63','#DFF3EF','check_circle','Posted in SAP. It will be picked up by the next payment run.','None.'],
+inv_scheduled:['Scheduled for Payment','#6B2FA0','#F3EAFB','event_upcoming','Included in an upcoming SAP payment run.','None. Check the planned payment date.'],
+inv_paid:['Paid','#1D6B2E','#E2F4E5','paid','Payment completed and cleared in SAP.','Download the remittance advice if needed.'],
+inv_returned:['Returned to Supplier','#9A3F07','#FDEBDD','undo','AP sent the invoice back without posting it.','Read the reason, correct the invoice and resubmit.'],
+inv_rejected:['Rejected','#A3221B','#FCE6E4','cancel','AP will not process this invoice.','Read the reason. Submit a new invoice only if asked.'],
+inv_blocked:['Blocked for Payment','#FFFFFF','#B42318','block','Posted in SAP, but payment is on hold.','Resolve the reason shown, e.g. upload a corrected invoice.'],
+inv_reversed:['Reversed / Cancelled','#4A5361','#FFFFFF','history','The SAP document was reversed and will not be paid.','None. Submit a new invoice if asked.'],
+po_open:['Open','#1F4E8C','#E7EEF8','radio_button_unchecked','PO issued. Nothing delivered yet.','Deliver goods or services as ordered.'],
+po_partdel:['Partially Delivered','#8A5300','#FDF1DC','local_shipping','Some PO lines have been received.','Invoice received quantities only.'],
+po_fullydel:['Fully Delivered','#0B6B63','#DFF3EF','inventory','All PO lines received or accepted.','Invoice the open quantity.'],
+po_partinv:['Partially Invoiced','#6B2FA0','#F3EAFB','receipt','Some received quantity is already invoiced.','Invoice any remaining open quantity.'],
+po_fullyinv:['Fully Invoiced','#1D6B2E','#E2F4E5','receipt_long','All received quantity has been invoiced.','None.'],
+po_closed:['Closed','#4A5361','#EEF0F3','lock','The buyer has closed this PO.','None. No further invoices accepted.'],
+gr_posted:['Posted','#0B6B63','#DFF3EF','inventory_2','Goods receipt posted in SAP.','You can invoice this quantity.'],
+gr_reversed:['Reversed','#4A5361','#FFFFFF','history','Goods receipt was reversed by the buyer.','Do not invoice this quantity.'],
+ses_pending:['Pending Acceptance','#8A5300','#FDF1DC','pending','Service entry sheet waiting for buyer acceptance.','None. Invoice after acceptance.'],
+ses_accepted:['Accepted','#0B6B63','#DFF3EF','verified','Buyer accepted the services.','You can invoice the accepted quantity.'],
+ses_rejected:['Rejected','#A3221B','#FCE6E4','cancel','Buyer rejected the service entry sheet.','Contact your buyer to agree corrections.']
+};
+class Component extends DCLogic {
+  state={tip:null};
+  renderVals(){
+    const k=this.props.status; const s=S[k]||['Unknown','#4A5361','#EEF0F3','help','Status not recognised.','Contact support.'];
+    const dashed=k==='inv_reversed'||k==='gr_reversed';
+    return {label:s[0],fg:s[1],bg:s[2],icon:s[3],meaning:s[4],action:s[5],
+      border:dashed?'1px dashed '+s[1]:'1px solid transparent',
+      show:!!this.state.tip,x:this.state.tip?this.state.tip.x:0,y:this.state.tip?this.state.tip.y:0,
+      enter:e=>{const r=e.currentTarget.getBoundingClientRect();this.setState({tip:{x:Math.max(8,Math.min(r.left,window.innerWidth-280)),y:r.bottom+6}})},
+      leave:()=>this.setState({tip:null})};
+  }
+}
+</script>
+</body>
+</html>
