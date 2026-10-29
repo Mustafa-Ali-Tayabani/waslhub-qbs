@@ -34,8 +34,8 @@ async function adminOnboardingDetail(ctx, h) {
   h.ok('P: channel vendor-view links present', (await h.count(p, S + ' a:has-text("Open vendor view")')) === 2);
   await p.screenshot({ path: h.SHOTS + '/p-onboarding-detail.png' });
   await p.click(S + ' tbody tr:has-text("ONB-00040")'); await p.waitForTimeout(500);
-  h.ok('P: accepted request shows lock banner + review actions', await h.has(p, S, 'already accepted via Magic link') && (await h.count(p, S + ' button:has-text("Complete review & activate")')) === 1);
-  await p.click(S + ' button:has-text("Complete review & activate")'); await p.waitForTimeout(600);
+  h.ok('P: accepted request shows lock banner + review actions', await h.has(p, S, 'already accepted via Magic link') && (await h.count(p, S + ' .ux-dr-foot button:has-text("Activate vendor")')) === 1 && await h.has(p, S + ' .ux-dr-foot', 'Your review'));
+  await p.click(S + ' .ux-dr-foot button:has-text("Activate vendor")'); await p.waitForTimeout(600);
   h.ok('P: activation works and prompts concerned person', await h.has(p, S, 'Active') && await h.has(p, S, 'Not assigned yet'));
   await p.click(S + ' button:has-text("Assign / reassign Concerned Person")'); await p.waitForTimeout(300);
   await p.fill(S + ' input[placeholder="e.g. Initial assignment"]', 'Initial assignment after activation');

@@ -18,7 +18,7 @@ async function actAs(p, name) { if (!(await p.$('[data-screen-label="00 Sign in"
 // Admin navigation: six sidebar sections, each with tabs under the header.
 async function goTo(p, section, tab) { await p.locator('aside nav a:has-text("' + section + '")').first().click(); await p.waitForTimeout(500); if (tab) { await p.locator('header [role=tablist] a:has-text("' + tab + '")').first().click(); await p.waitForTimeout(600); } }
 async function login(p) { if (!(await p.$('button:has-text("Log in")'))) { if (!(await has(p, 'header', 'Lena Marsh'))) { await p.click('button[aria-label="Account menu"]'); await p.click('button:has-text("Switch account")'); await p.waitForTimeout(400); await p.click('button:has-text("Lena Marsh")'); await p.waitForTimeout(700); } return; } await p.click('button:has-text("Log in")'); await p.waitForTimeout(600); for (const [i, el] of (await p.$$('input[inputmode=numeric]')).entries()) await el.type(String(i + 1)); const v = await p.$('button:has-text("Verify")'); if (v) await v.click(); await p.waitForTimeout(1000); }
-async function dock(p, label) { if (!(await p.$('text=Prototype controls'))) { await p.click('button:has-text("Prototype")'); await p.waitForTimeout(300); } await p.locator('div:has(> span:text("Table state (all lists)")) button:has-text("' + label + '"), div:has(> span:text("SAP sync")) button:has-text("' + label + '")').first().click(); await p.waitForTimeout(1100); }
+async function dock(p, label) { if (!(await p.$('text=Prototype controls'))) { await p.click('button:has-text("Prototype")'); await p.waitForTimeout(300); } await p.locator('div:has(> span:text("Table state (all lists)")) button:has-text("' + label + '"), div:has(> span:text("SAP sync")) button:has-text("' + label + '")').first().click(); await p.waitForTimeout(1100); await p.locator('div:has(> b:text("Prototype controls")) button').first().click().catch(() => {}); await p.waitForTimeout(200); }
 
 async function supplierRegression(ctx) {
   const p = await open(ctx, 'index.html');
@@ -73,7 +73,7 @@ async function designSystem(ctx) { const p = await open(ctx, 'design-system.html
   const scenarios = { supplierRegression, adminRegression, designSystem };
   try { Object.assign(scenarios, require('./parco.scenarios.js')); } catch (e) { if (process.env.DEBUG) console.log('no parco scenarios:', e.message); }
   const only = process.argv[2];
-  for (const [name, fn] of Object.entries(scenarios)) { if (only && name !== only) continue; try { await fn(ctx, { open, login, ok, count, text, has, tipText, dock, SHOTS, file, actAs, goTo }); } catch (e) { R.push('ABORT ' + name + ': ' + e.message.slice(0, 300)); } }
+  for (const [name, fn] of Object.entries(scenarios)) { if (only && name !== only) continue; try { await fn(ctx, { open, login, ok, count, text, has, tipText, dock, SHOTS, file, actAs, goTo }); } catch (e) { R.push('ABORT ' + name + ': ' + e.message.slice(0, 1500)); } }
   await browser.close();
   console.log(R.filter(r => !r.startsWith('PASS')).join('\n'));
   console.log('errors:', errs.length ? '\n' + errs.join('\n') : 'none');
