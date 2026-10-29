@@ -1,5 +1,7 @@
 /* PARCO scenario checks (loaded by tests/e2e.js). Shared demo data lives in localStorage, so each scenario resets it first. */
 const reset = async (p) => { await p.evaluate(() => window.PARCO.reset()); await p.waitForTimeout(400); };
+const actAs = async (p, name) => { if (!(await p.$('[data-screen-label="00 Sign in"]'))) { await p.click('button[aria-label="Account menu"]'); await p.waitForTimeout(200); await p.click('button:has-text("Switch account")'); await p.waitForTimeout(400); } await p.click('[data-screen-label="00 Sign in"] button:has-text("' + name + '")'); await p.waitForTimeout(700); };
+const goTo = async (p, section, tab) => { await p.locator('aside nav a:has-text("' + section + '")').first().click(); await p.waitForTimeout(500); if (tab) { await p.locator('header [role=tablist] a:has-text("' + tab + '")').first().click(); await p.waitForTimeout(600); } };
 async function adminShellAndOverview(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p); await p.reload(); await p.waitForTimeout(2500);
   const O = '[data-screen-label="08 Overview"]';
@@ -7,15 +9,18 @@ async function adminShellAndOverview(ctx, h) {
   h.ok('P: needs-attention lists due items with reminders', (await h.count(p, O + ' button:has-text("Send reminder")')) >= 4);
   h.ok('P: acting user shown', await h.has(p, 'header', 'Ayesha Khan') && await h.has(p, 'header', 'PARCO Admin'));
   await p.screenshot({ path: h.SHOTS + '/p-overview.png' });
-  await p.click('button:has-text("Prototype")'); await p.waitForTimeout(300);
-  await p.click('button:has-text("Hassan Malik")'); await p.waitForTimeout(600);
-  h.ok('P: act as approver hides onboarding nav', !(await h.has(p, 'nav', 'Vendor Onboarding')) && await h.has(p, 'nav', 'Supply Approvals') && await h.has(p, 'header', 'Hassan Malik'));
-  await p.click('button:has-text("Ayesha Khan")'); await p.waitForTimeout(500);
-  h.ok('P: back to admin shows onboarding nav', await h.has(p, 'nav', 'Vendor Onboarding'));
+  await actAs(p, 'Hassan Malik');
+  h.ok('P: approver sign-in scopes the navigation', !(await h.has(p, 'aside nav', 'Finance')) && !(await h.has(p, 'aside nav', 'Setup')) && await h.has(p, 'aside nav', 'Approvals') && await h.has(p, 'header', 'Hassan Malik'));
+  await goTo(p, 'Vendors');
+  h.ok('P: approver has no Onboarding tab (single Vendors screen, no tab row)', !(await h.has(p, 'header', 'Onboarding')) && (await h.count(p, 'header [role=tablist]')) === 0 && (await h.count(p, '[data-screen-label="08 Vendors"]')) === 1);
+  await actAs(p, 'Ayesha Khan'); await goTo(p, 'Vendors');
+  h.ok('P: admin sign-in restores Finance, Setup and the Onboarding tab', await h.has(p, 'aside nav', 'Finance') && await h.has(p, 'aside nav', 'Setup') && await h.has(p, 'header [role=tablist]', 'Onboarding'));
+  await p.reload(); await p.waitForTimeout(2500);
+  h.ok('P: session survives a reload (no sign-in screen)', (await h.count(p, '[data-screen-label="00 Sign in"]')) === 0 && await h.has(p, 'header', 'Ayesha Khan'));
   await p.close();
 }
 async function adminOnboardingDetail(ctx, h) {
-  const p = await h.open(ctx, 'admin.html'); await reset(p); await p.click('text=Vendor Onboarding'); await p.waitForTimeout(800);
+  const p = await h.open(ctx, 'admin.html'); await reset(p); await goTo(p, 'Vendors', 'Onboarding');
   const S = '[data-screen-label="08 Vendor Onboarding"]';
   h.ok('P: onboarding table 4 requests', (await h.count(p, S + ' tbody tr')) === 4);
   await p.click(S + ' tbody tr:has-text("ONB-00041")'); await p.waitForTimeout(600);
@@ -34,7 +39,7 @@ async function adminOnboardingDetail(ctx, h) {
   await p.close();
 }
 async function adminInviteWizard(ctx, h) {
-  const p = await h.open(ctx, 'admin.html'); await reset(p); await p.click('text=Vendor Onboarding'); await p.waitForTimeout(600);
+  const p = await h.open(ctx, 'admin.html'); await reset(p); await goTo(p, 'Vendors', 'Onboarding');
   await p.click('button:has-text("Invite vendor")'); await p.waitForTimeout(400);
   const W = 'div[role=dialog]';
   await p.fill(W + ' input[placeholder^="Search by SAP"]', 'Lahore'); await p.waitForTimeout(300);
@@ -81,7 +86,7 @@ async function emailActionApproval(ctx, h) {
   await reset(p); await p.close();
 }
 async function adminVendorsAuditNotifications(ctx, h) {
-  const p = await h.open(ctx, 'admin.html'); await reset(p); await p.click('text=Vendors'); await p.waitForTimeout(700);
+  const p = await h.open(ctx, 'admin.html'); await reset(p); await goTo(p, 'Vendors', 'Directory');
   const V = '[data-screen-label="08 Vendors"]';
   h.ok('P: vendors table 6 SAP vendors', (await h.count(p, V + ' tbody tr')) === 6);
   await p.click(V + ' tbody tr:has-text("V-1000236")'); await p.waitForTimeout(600);
@@ -100,23 +105,22 @@ async function adminVendorsAuditNotifications(ctx, h) {
   const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 8000 }).catch(() => null), p.click('div[role=dialog] button:has-text("Download PDF")')]);
   h.ok('P: Download PDF produces a file', !!dl && /\.pdf$/.test(dl.suggestedFilename()), dl ? dl.suggestedFilename() : 'no download');
   await p.click('div[role=dialog] button[aria-label="Close"]'); await p.waitForTimeout(300);
-  await p.click('text=Audit & Contact Logs'); await p.waitForTimeout(700);
+  await goTo(p, 'Activity', 'Audit & contact logs');
   const A = '[data-screen-label="08 Audit & Contact Logs"]';
   const n = await h.count(p, A + ' tbody tr');
   h.ok('P: audit log populated', n >= 20, 'rows=' + n);
   await p.selectOption(A + ' select >> nth=0', 'V-1000237'); await p.waitForTimeout(400);
   h.ok('P: audit filter by vendor', (await h.count(p, A + ' tbody tr')) < n && await h.has(p, A, 'Coastal Civil Works'));
-  await p.click('text=Notifications & Reminders'); await p.waitForTimeout(600);
+  await goTo(p, 'Activity', 'Notifications & reminders');
   const N = '[data-screen-label="08 Notifications & Reminders"]';
   h.ok('P: notifications due items + reminder history', (await h.count(p, N + ' button:has-text("Send reminder")')) >= 4 && (await h.count(p, N + ' tbody tr')) >= 1);
   await p.close();
 }
 module.exports = { adminShellAndOverview, adminOnboardingDetail, adminInviteWizard, emailActionApproval, adminVendorsAuditNotifications };
 
-const actAs = async (p, name) => { if (!(await p.$('text=Prototype controls'))) { await p.click('button:has-text("Prototype")'); await p.waitForTimeout(300); } await p.click('button:has-text("' + name + '")'); await p.waitForTimeout(600); await p.locator('div:has(> b:text("Prototype controls")) button').click().catch(() => {}); await p.waitForTimeout(200); };
 async function supplyTwoPersonApproval(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
-  await actAs(p, 'Hassan Malik'); await p.locator('nav a:has-text("Supply Approvals")').click(); await p.waitForTimeout(700);
+  await actAs(p, 'Hassan Malik'); await goTo(p, 'Approvals', 'Supply');
   const S = '[data-screen-label="08 Supply Approvals"]';
   h.ok('P: supply approvals lists DSP-00081 pending L1', (await h.count(p, S + ' tbody tr:has-text("PARCO-DSP-00081")')) === 1);
   await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(600);
@@ -124,14 +128,14 @@ async function supplyTwoPersonApproval(ctx, h) {
   await p.screenshot({ path: h.SHOTS + '/p-supply-detail.png' });
   await p.click(S + ' button:has-text("Accept")'); await p.waitForTimeout(600);
   h.ok('P: after L1 → pending level 2, L2 not mine', await h.has(p, S, 'Pending Level 2') && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide'));
-  await actAs(p, 'Sana Ahmed'); await p.locator('nav a:has-text("Supply Approvals")').click(); await p.waitForTimeout(600); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
+  await actAs(p, 'Sana Ahmed'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
   h.ok('P: L2 approver can accept', (await h.count(p, S + ' button:has-text("Accept")')) === 1 && !(await h.has(p, S, 'Simulate SAP GR')));
   await p.click(S + ' button:has-text("Accept")'); await p.waitForTimeout(600);
   h.ok('P: fully approved → awaiting SAP, not posted', await h.has(p, S, 'Approved · awaiting SAP') && await h.has(p, S, 'Awaiting goods receipt in SAP') && await h.has(p, S, 'Not available from SAP'));
-  await actAs(p, 'Ayesha Khan'); await p.locator('nav a:has-text("Supply Approvals")').click(); await p.waitForTimeout(600); await p.click(S + ' button:has-text("All submissions")'); await p.waitForTimeout(300); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
+  await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' button:has-text("All submissions")'); await p.waitForTimeout(300); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
   await p.click(S + ' button:has-text("Simulate SAP GR confirmation")'); await p.waitForTimeout(600);
   h.ok('P: simulated GR confirmation → ready for invoice with SAP doc', await h.has(p, S, 'Ready for invoice') && await h.has(p, S, 'Goods receipt posted') && await h.has(p, S, '/ 2026'));
-  await p.click('text=Audit & Contact Logs'); await p.waitForTimeout(600);
+  await goTo(p, 'Activity', 'Audit & contact logs');
   const A = '[data-screen-label="08 Audit & Contact Logs"]';
   await p.fill(A + ' input[placeholder^="Search action"]', 'PARCO-DSP-00081'); await p.waitForTimeout(400);
   h.ok('P: audit has L1, L2 and SAP events for the dispatch', (await h.count(p, A + ' tbody tr')) >= 4 && await h.has(p, A, 'simulated SAP event'));
@@ -139,18 +143,18 @@ async function supplyTwoPersonApproval(ctx, h) {
 }
 async function sodAndServices(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
-  await actAs(p, 'Hassan Malik'); await p.locator('nav a:has-text("Service Approvals")').click(); await p.waitForTimeout(700);
+  await actAs(p, 'Hassan Malik'); await goTo(p, 'Approvals', 'Services');
   const S = '[data-screen-label="08 Service Approvals"]';
   await p.click(S + ' tbody tr:has-text("PARCO-SRV-000112")'); await p.waitForTimeout(500);
   h.ok('P: SoD — Hassan already decided L1, cannot act on L2', (await h.count(p, S + ' button:has-text("Accept")')) === 0 && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide') && await h.has(p, S, 'Client Request Number'));
-  await actAs(p, 'Ayesha Khan'); await p.locator('nav a:has-text("Service Approvals")').click(); await p.waitForTimeout(600);
+  await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Services');
   h.ok('P: client requests table lists 3 CRs', (await p.locator(S + ' table').nth(1).locator('tbody tr').count()) === 3);
   await p.click(S + ' button:has-text("Issue client request")'); await p.waitForTimeout(300);
   await p.selectOption(S + ' select >> nth=0', 'V-1000236'); await p.waitForTimeout(200);
   const svcOpts = await p.locator(S + ' select').nth(1).innerText(); h.ok('P: service options limited to the vendor’s enabled services', svcOpts.includes('Equipment Inspection') && !svcOpts.includes('Civil Maintenance'));
   await p.selectOption(S + ' select >> nth=1', 'SVC-MECH-01'); await p.fill(S + ' input[placeholder="45000124xx"]', '4500012440'); await p.locator(S + ' label:has-text("PARCO site") input').fill('Korangi Terminal (Demo site)'); await p.locator(S + ' button:text-is("Issue")').click(); await p.waitForTimeout(600);
   h.ok('P: client request issued by PARCO', (await p.locator(S + ' table').nth(1).locator('tbody tr').count()) === 4 && await h.has(p, S, 'PARCO (issued in portal)'));
-  await p.click('text=Services Master Data'); await p.waitForTimeout(600);
+  await goTo(p, 'Setup', 'Services master data');
   const M = '[data-screen-label="08 Services Master Data"]';
   h.ok('P: services master 5 SAP services', (await h.count(p, M + ' tbody tr')) === 5);
   await p.click(M + ' tbody tr:has-text("SVC-MECH-01")'); await p.waitForTimeout(400);
@@ -163,8 +167,9 @@ async function sodAndServices(ctx, h) {
 async function concernedPersonOnBehalf(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
   await actAs(p, 'Farhan Siddiqui');
-  h.ok('P: concerned person nav is scoped', await h.has(p, 'nav', 'Assigned Vendors') && !(await h.has(p, 'nav', 'Finance')));
-  await p.locator('nav a:has-text("Assigned Vendors")').click(); await p.waitForTimeout(600);
+  await goTo(p, 'Vendors');
+  h.ok('P: concerned person nav is scoped', await h.has(p, 'header [role=tablist]', 'Assigned to me') && !(await h.has(p, 'aside nav', 'Finance')) && !(await h.has(p, 'aside nav', 'Approvals')));
+  await goTo(p, 'Vendors', 'Assigned to me');
   const G = '[data-screen-label="08 Assigned Vendors"]';
   h.ok('P: Farhan sees only his 2 assigned vendors', (await h.count(p, G + ' button:has-text("Upload invoice on behalf")')) === 2 && await h.has(p, G, 'Karachi Industrial') && await h.has(p, G, 'Indus Technical') && !(await h.has(p, G, 'Sindh Field')));
   await p.locator(G + ' > div > div:has-text("Indus Technical") button:has-text("Upload invoice on behalf")').first().click(); await p.waitForTimeout(400);
@@ -185,7 +190,7 @@ async function concernedPersonOnBehalf(ctx, h) {
 }
 async function financeAndPayments(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
-  await actAs(p, 'Bilal Raza'); await p.locator('nav a:has-text("Finance & Invoices")').click(); await p.waitForTimeout(700);
+  await actAs(p, 'Bilal Raza'); await goTo(p, 'Finance', 'Invoices');
   const F = '[data-screen-label="08 Finance & Invoices"]';
   h.ok('P: finance lists 3 invoices with ATL and WHT columns', (await h.count(p, F + ' tbody tr')) === 3 && await h.has(p, F + ' thead', 'ATL') && await h.has(p, F + ' thead', 'WHT'));
   await p.click(F + ' tbody tr:has-text("INV-DEMO-2026-092")'); await p.waitForTimeout(500);
@@ -195,7 +200,7 @@ async function financeAndPayments(ctx, h) {
   await p.click(F + ' tbody tr:has-text("INV-DEMO-2026-093")'); await p.waitForTimeout(500);
   h.ok('P: WHT breakdown from SAP tax data', await h.has(p, F, '8.00 %') && await h.has(p, F, '754,400.00 PKR') && await h.has(p, F, 'SAP tax data (simulated)'));
   await p.screenshot({ path: h.SHOTS + '/p-finance-detail.png' });
-  await p.locator('nav a:has-text("Payment Insight")').click(); await p.waitForTimeout(600);
+  await goTo(p, 'Finance', 'Payment insight');
   const Y = '[data-screen-label="08 Payment Insight"]';
   h.ok('P: payment insight lists scheduled invoice with planned run', (await h.count(p, Y + ' tbody tr')) >= 1 && await h.has(p, Y, '05-Nov-2026 (planned)') && await h.has(p, Y, 'Not available from SAP'));
   await p.locator(Y + ' button:has-text("View PDF")').first().click(); await p.waitForTimeout(800);
@@ -219,7 +224,7 @@ async function supplierSharedOnboardingStatus(ctx, h) {
   h.ok('S: magic link now read-only: already accepted via Email', await h.has(p, M, 'already accepted via Email') && (await h.count(p, M + ' button:has-text("Accept onboarding")')) === 0 && await h.has(p, M, 'Locked · decided via Email'));
   await p.screenshot({ path: h.SHOTS + '/s-onboarding-portal-locked.png' });
   await p.close();
-  p = await h.open(ctx, 'admin.html'); await p.click('text=Vendor Onboarding'); await p.waitForTimeout(700);
+  p = await h.open(ctx, 'admin.html'); await goTo(p, 'Vendors', 'Onboarding');
   const A = '[data-screen-label="08 Vendor Onboarding"]';
   h.ok('A: admin immediately sees Vendor accepted · channel Email', await h.has(p, A + ' tbody tr:has-text("ONB-00041")', 'Vendor accepted') && await h.has(p, A + ' tbody tr:has-text("ONB-00041")', 'Accepted here'));
   await p.close();
@@ -235,8 +240,10 @@ async function supplierSupplyAndServices(ctx, h) {
   const p = await h.open(ctx, 'index.html'); await reset(p); await h.login(p);
   const D = '[data-screen-label="02 Dashboard"]';
   h.ok('S: dashboard shows PARCO supply & services panel', await h.has(p, D, 'Supply & services with PARCO') && await h.has(p, D, 'Supply + Services'));
-  h.ok('S: nav shows Supply and Services workflows (Both capability)', await h.has(p, 'nav', 'Supply Workflow') && await h.has(p, 'nav', 'Services Workflow'));
-  await p.locator('nav a:has-text("Supply Workflow")').click(); await p.waitForTimeout(800);
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(800);
+  const T = '[data-screen-label="03 Workflow"]';
+  h.ok('S: one Workflow screen with SAP documents, Supply and Services tabs (Both capability)', (await h.count(p, T + ' [role=tab]')) === 3 && await h.has(p, T, 'Supply dispatches') && await h.has(p, T, 'Service work'));
+  await p.click(T + ' [role=tab]:has-text("Supply dispatches")'); await p.waitForTimeout(800);
   const S = '[data-screen-label="03 Supply Workflow"]';
   h.ok('S: existing dispatch listed pending L1', await h.has(p, S + ' tbody tr:has-text("PARCO-DSP-00081")', 'Pending Level 1'));
   await p.click(S + ' button:has-text("New dispatch")'); await p.waitForTimeout(300);
@@ -248,7 +255,7 @@ async function supplierSupplyAndServices(ctx, h) {
   await p.click(S + ' button:has-text("Submit dispatch for PARCO approval")'); await p.waitForTimeout(800);
   h.ok('S: dispatch submitted and detail shows two-person approval pending L1', await h.has(p, S, 'PARCO-DSP-00082') && await h.has(p, S, 'Level 1 · Hassan Malik') && await h.has(p, S, 'Awaiting decision'));
   await p.screenshot({ path: h.SHOTS + '/s-supply-detail.png' });
-  await p.locator('nav a:has-text("Services Workflow")').click(); await p.waitForTimeout(800);
+  await p.click(T + ' [role=tab]:has-text("Service work")'); await p.waitForTimeout(800);
   const V = '[data-screen-label="03 Services Workflow"]';
   h.ok('S: services shows enabled services and 2 client requests', await h.has(p, V, 'Equipment Inspection') && (await p.locator(V + ' table').nth(0).locator('tbody tr').count()) === 2 && await h.has(p, V, 'Mehmoodkot'));
   await p.click(V + ' tbody tr:has-text("PARCO-CR-000412") button:has-text("Submit work")'); await p.waitForTimeout(300);
@@ -256,13 +263,13 @@ async function supplierSupplyAndServices(ctx, h) {
   await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(800);
   h.ok('S: concurrent service submission created while supply pending', await h.has(p, V, 'PARCO-SRV-000113') && await h.has(p, V, 'Level 1 · Hassan Malik'));
   await p.close();
-  const a = await h.open(ctx, 'admin.html'); await a.locator('nav a:has-text("Supply Approvals")').click(); await a.waitForTimeout(700);
+  const a = await h.open(ctx, 'admin.html'); await goTo(a, 'Approvals', 'Supply');
   h.ok('A: admin sees the new dispatch pending Level 1', await h.has(a, '[data-screen-label="08 Supply Approvals"]', 'PARCO-DSP-00082'));
   await reset(a); await a.close();
 }
 async function supplierInvoiceAttributionAndProfile(ctx, h) {
   const p = await h.open(ctx, 'index.html'); await reset(p); await h.login(p);
-  await p.click('text=Supplier Workflow'); await p.waitForTimeout(1000);
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(1000);
   const W = '[data-screen-label="03 Supplier Workflow"]';
   await p.fill(W + ' input[placeholder^="Search by SAP"]', 'INV-DEMO-2026-092'); await p.waitForTimeout(500);
   h.ok('S: on-behalf invoice visible in workflow with attribution', (await h.count(p, W + ' tbody tr')) === 1 && await h.has(p, W, 'Uploaded by PARCO on your behalf'));
@@ -287,7 +294,7 @@ async function supplierInvoiceAttributionAndProfile(ctx, h) {
   await p.click('text=Notifications'); await p.waitForTimeout(800);
   h.ok('S: notifications include PARCO on-behalf event', await h.has(p, '[data-screen-label="07 Notifications"]', 'PARCO acted on your behalf'));
   await p.close();
-  const a = await h.open(ctx, 'admin.html'); await a.click('button:has-text("Prototype")'); await a.click('button:has-text("Farhan Siddiqui")'); await a.waitForTimeout(500); await a.locator('div:has(> b:text("Prototype controls")) button').click(); await a.locator('nav a:has-text("Assigned Vendors")').click(); await a.waitForTimeout(600);
+  const a = await h.open(ctx, 'admin.html'); await actAs(a, 'Farhan Siddiqui'); await goTo(a, 'Vendors', 'Assigned to me');
   h.ok('A: concerned person sees the vendor help request', await h.has(a, '[data-screen-label="08 Assigned Vendors"]', 'help request') && await h.has(a, '[data-screen-label="08 Assigned Vendors"]', 'INV-DEMO-2026-095'));
   await reset(a); await a.close();
 }

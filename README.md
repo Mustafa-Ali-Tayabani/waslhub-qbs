@@ -2,8 +2,8 @@
 
 Clickable, data-backed prototype of a multi-tenant supplier invoicing portal for SAP S/4HANA buyers, configured for the PARCO (Pakistan) vendor onboarding, supply and services workflow.
 
-- `public/index.html` — Supplier Portal (vendor side)
-- `public/admin.html` — Tenant Admin (PARCO side; switch the acting PARCO user from the Prototype dock)
+- `public/index.html` — Supplier Portal (vendor side; sign in as one of the three vendor demo accounts, or use the plain login form)
+- `public/admin.html` — Tenant Admin (PARCO side; sign in as one of the five PARCO demo accounts, switch from the account menu in the header)
 - `public/design-system.html` — status tags, theme tokens, change log, acceptance checklist
 
 ## Build and run

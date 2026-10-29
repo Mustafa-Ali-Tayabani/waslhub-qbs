@@ -5,8 +5,8 @@ Three pages ship in `public/`:
 
 | Page | File | User | Sample identity |
 |---|---|---|---|
-| Supplier Portal | `index.html` | Vendor user | Lena Marsh (Demo), Vendor Organization Admin of Indus Technical Trading & Services (Demo), V-1000236, at tenant PARCO — Pakistan |
-| Tenant Admin | `admin.html` | PARCO staff | Ayesha Khan (PARCO Admin) by default; switch to Finance, Approver 1 / 2 or Concerned Person from the Prototype dock |
+| Supplier Portal | `index.html` | Vendor user | Demo accounts on the login page: Lena Marsh (Vendor Organization Admin), Daniel Okafor (Vendor Operations), Priya Raman (Vendor Finance), all of Indus Technical Trading & Services (Demo), V-1000236, at tenant PARCO — Pakistan. The email/password form also signs in (no credential check). |
+| Tenant Admin | `admin.html` | PARCO staff | Sign-in screen with five demo accounts: Ayesha Khan (PARCO Admin), Bilal Raza (Finance), Hassan Malik (Approver 1), Sana Ahmed (Approver 2), Farhan Siddiqui (Concerned Person). The session is remembered in the browser; *Switch account* / *Log out* live in the header account menu. |
 | Design System & Change Log | `design-system.html` | Reference only | Status tags, theme tokens, theme demo, change log, acceptance checklist |
 
 Every Mermaid block below renders on GitHub. Section 10 repeats the same edges as a flat table for Figma / FigJam / Miro.
@@ -32,7 +32,7 @@ Use the IDs as node names.
 | S09 | Link expired | 01 Auth · Link expired | Invitation / reset link expired or used. |
 | S10 | Welcome modal | (over Dashboard) | First-time hints after onboarding. |
 | S11 | Home / Dashboard | 02 Dashboard | KPIs, action required, upcoming payments, POs ready to invoice. |
-| S12 | Supplier Workflow | 03 Supplier Workflow | All SAP documents: tabs, search, filters, sort, pagination, export. |
+| S12 | Workflow · SAP documents | 03 Supplier Workflow | First tab of the single Workflow screen. All SAP documents: tabs, search, filters, sort, pagination, export. |
 | S13 | PO Detail | 04 PO Detail | Header, lines with open-to-invoice qty, linked documents. |
 | S14 | GR Detail | 04 GR Detail | Read-only goods receipt (material document). |
 | S15 | SES Detail | 04 SES Detail | Read-only service entry sheet. |
@@ -45,8 +45,8 @@ Use the IDs as node names.
 | S22 | Documentation | 07 Documentation | Nine in-app guides (getting started, invoice, credit memo, standalone, statuses, blocked reasons, payments, users, formats) with a button into the related screen. |
 | S23 | Onboarding · magic link form | 01 Onboarding · Magic Link | Public page from the invitation link: SAP-prefilled review, acknowledgement, Accept / Reject. Shares one status with S24. |
 | S24 | Onboarding · email action | 01 Onboarding · Email Action | Public verified decision page opened from the (simulated) email. Shares one status with S23. |
-| S25 | Supply Workflow | 03 Supply Workflow | Dispatch against SAP POs, evidence, two-person PARCO approval timeline, SAP GR status, resubmission. |
-| S26 | Services Workflow | 03 Services Workflow | Enabled services, PARCO client requests, service work submission, approval timeline, SES status. |
+| S25 | Workflow · Supply dispatches | 03 Supply Workflow | Second tab of the Workflow screen (Supply capability). Dispatch against SAP POs, evidence, two-person PARCO approval timeline, SAP GR status, resubmission. |
+| S26 | Workflow · Service work | 03 Services Workflow | Third tab of the Workflow screen (Services capability). Enabled services, PARCO client requests, service work submission, approval timeline, SES status. |
 
 ### Tenant Admin
 
@@ -104,7 +104,7 @@ Available on every signed-in screen (S11–S22).
 | Element | Target |
 |---|---|
 | Sidebar: Home | S11 |
-| Sidebar: Supplier Workflow | S12 |
+| Sidebar: Workflow | S12 (one screen with tabs: SAP documents · Supply dispatches (S25) · Service work (S26); tabs appear only for the capabilities PARCO enabled) |
 | Sidebar: Payment Insight | S19 |
 | Sidebar: Notifications (unread badge) | S20 |
 | Sidebar: Profile | S21 |
@@ -116,8 +116,8 @@ Available on every signed-in screen (S11–S22).
 | Header: Last synced with SAP pill, sync icon | Toast "Sync requested"; in the failed state a Retry button restores sync |
 | Header: company selector (All companies / 1000 / 2000) | Filters every list and total to the selected company code |
 | Header: bell | S20 |
-| Header: user | S21 |
-| Breadcrumb "Supplier Workflow" on detail screens | S12 |
+| Header: account menu | Company profile & users (S21) · Switch account (S01 with demo accounts) · Log out (S01) |
+| Breadcrumb "Workflow" on detail screens | S12 |
 
 ---
 
@@ -273,7 +273,7 @@ flowchart TD
   A05[A05 Admin users & roles] -->|Add admin user · no-op in prototype| A05
 ```
 
-Sidebar on every admin screen: Tenant settings, SAP connection, Supplier management, Monitoring (badge = exception count), Admin users & roles. Header: last-sync pill (or red "SAP sync failed · Retry"), signed-in admin.
+Admin navigation (after sign-in): six sidebar sections, each with tabs under the header — **Overview**; **Vendors** (Onboarding · Directory · Assigned to me); **Approvals** (Supply · Services); **Finance** (Invoices · Payment insight); **Activity** (Notifications & reminders · Audit & contact logs); **Setup** (Tenant settings · SAP connection · Services master data · Users & roles · Monitoring). Sections and tabs are filtered by the signed-in role. Header: section name, last-sync pill (or red "SAP sync failed · Retry"), account menu (Switch account · Log out).
 
 ---
 
@@ -282,12 +282,12 @@ Sidebar on every admin screen: Tenant settings, SAP connection, Supplier managem
 | Control | Supplier Portal | Tenant Admin |
 |---|---|---|
 | Flows | Login · Onboarding · Link expired · Reset password · Invoice happy path + blocked · Payments | — |
-| Jump to screen | Any of S01–S22 | A01–A05 |
+| Jump to screen | Any of S01–S26 | Any admin screen the signed-in role may open |
 | Table state (all lists) | Data · Loading · Empty · Error for workflow, payments, notifications, PO linked documents | Same for all four admin tables |
 | SAP sync | Synced · Sync failed (header pill, banner, table error state) | Synced · Sync failed (pill, banner, connection card, sync-log row) |
 | Invoice NIS-INV-2025-0871 | Blocked · Scheduled · Paid | — |
 
-Prototype-only helpers (reset-link opener, expired-link opener, payment-run simulator) are hidden when the dock is switched off via the `showPrototypeDock` property.
+Prototype-only helpers (reset-link opener, expired-link opener, payment-run simulator) are hidden when the dock is switched off via the `showPrototypeDock` property. Changing who you are is not a dock control any more: both portals have a sign-in screen with demo accounts, and *Switch account* in the header menu returns to it.
 
 Recommended demo path: Log in → Dashboard → PO 4500012345 → Create Invoice (change a unit price) → Submitted → View invoice (Blocked, Price Variance) → Upload corrected invoice → Resubmit (Scheduled) → Simulate payment run (Paid) → Remittance advice. Admin path: Supplier management → Invite supplier → three steps.
 

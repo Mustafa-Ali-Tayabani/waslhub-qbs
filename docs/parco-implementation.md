@@ -17,7 +17,7 @@ Implemented inside the **two existing WaslHub portals** (Supplier Portal `public
 | SAP posting (GR / SES), SAP document numbers for new records | **Simulated** — "Simulate SAP GR / SES confirmation (prototype)" is an admin-only, clearly labelled control; until used the workflow shows *Awaiting goods receipt / SES in SAP* and *Not available from SAP* | Approvals detail |
 | ATL — Active Taxpayer List (FBR) | **Simulated** — no integration; Finance records a manual check with a labelled source; default *Not verified · integration not configured* | Vendor detail, Finance, Supplier profile |
 | WHT — Withholding Tax | **Data-driven, never hard-coded** — rate comes from the invoice record (labelled *SAP tax data (simulated)*) or is shown as *Awaiting SAP tax data*; net payable is computed only when a rate exists | Finance, invoice detail, PDF |
-| Credentials / login | Prototype: Log in without credentials; OTP accepts any digits (pre-existing decision) | Supplier login |
+| Credentials / login | Prototype: demo-account sign-in on both portals (pick a person; the session is remembered in the browser; *Switch account* / *Log out* in the header menu). The supplier email/password form still works without a credential check; OTP accepts any digits | Supplier login, Tenant Admin sign-in |
 
 ## 2. Demo identities and fixtures (all fictional, `@example.com`)
 
@@ -69,10 +69,10 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 ## 7. Files and routes
 
 - `parco-store.js` — shared data layer (fixtures, commands, PDF, labels), embedded into all three pages by `build.py`.
-- `Supplier Portal.dc.html` — new screens: `01 Onboarding · Magic Link`, `01 Onboarding · Email Action`, `03 Supply Workflow`, `03 Services Workflow`; registry invoices in Supplier Workflow, Invoice Detail (attribution, WHT, PDF), Payment Insight (PDF), Profile (NTN/STRN, ATL, Concerned Person, help requests, roles), Dashboard panel, Notifications merge.
-- `Tenant Admin.dc.html` — role-gated grouped navigation; new screens `08 Overview`, `08 Vendor Onboarding` (+ Invite wizard), `08 Vendors`, `08 Supply Approvals`, `08 Service Approvals` (+ client requests), `08 Services Master Data`, `08 Assigned Vendors` (+ on-behalf upload), `08 Finance & Invoices`, `08 Payment Insight`, `08 Notifications & Reminders`, `08 Audit & Contact Logs`, `08 Email Action`; PDF viewer; prototype dock with *Act as* and *Reset PARCO demo data*.
+- `Supplier Portal.dc.html` — demo-account sign-in, header account menu, one **Workflow** screen with tabs (SAP documents · Supply dispatches · Service work; screens `03 Supplier Workflow`, `03 Supply Workflow`, `03 Services Workflow`); new screens `01 Onboarding · Magic Link`, `01 Onboarding · Email Action`; registry invoices in the SAP documents tab, Invoice Detail (attribution, WHT, PDF), Payment Insight (PDF), Profile (NTN/STRN, ATL, Concerned Person, help requests, roles), Dashboard panel, Notifications merge.
+- `Tenant Admin.dc.html` — `00 Sign in` with five demo accounts (session in `localStorage` key `waslhub.parco.session`), six role-gated sidebar sections with tabs (Overview · Vendors · Approvals · Finance · Activity · Setup), header account menu; invite wizard step 3 picks the primary contact and additional users from the vendor's SAP contact persons (`vendor.contacts`); new screens `08 Overview`, `08 Vendor Onboarding` (+ Invite wizard), `08 Vendors`, `08 Supply Approvals`, `08 Service Approvals` (+ client requests), `08 Services Master Data`, `08 Assigned Vendors` (+ on-behalf upload), `08 Finance & Invoices`, `08 Payment Insight`, `08 Notifications & Reminders`, `08 Audit & Contact Logs`, `08 Email Action`; PDF viewer; prototype dock with *Act as* and *Reset PARCO demo data*.
 - URLs: `index.html?onboarding=<ONB-id>&channel=portal|email`, `admin.html?task=<task-id>&channel=email`, `admin.html?screen=<screen>&request=|vendor=|submission=<id>`.
-- Tests: `tests/e2e.js` + `tests/parco.scenarios.js` (107 checks, headless Chrome). Run `node tests/e2e.js`.
+- Tests: `tests/e2e.js` + `tests/parco.scenarios.js` (109 checks, headless Chrome). Run `node tests/e2e.js`.
 
 ## 8. Acceptance checklist
 
