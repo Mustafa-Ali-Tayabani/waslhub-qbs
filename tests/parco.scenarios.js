@@ -5,11 +5,16 @@ const goTo = async (p, section, tab) => { await p.locator('aside nav a:has-text(
 async function adminShellAndOverview(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p); await p.reload(); await p.waitForTimeout(2500);
   const O = '[data-screen-label="08 Overview"]';
-  h.ok('P: overview default with 6 KPIs', (await h.count(p, O + ' button:has-text("info")')) === 6);
+  h.ok('P: overview has 4 role KPI tiles for the admin', (await h.count(p, O + ' .ux-tile')) === 4 && await h.has(p, O, 'Waiting for your review') && await h.has(p, O, 'Good '));
+  h.ok('P: admin to-do shows the activation waiting for her', await h.has(p, O + ' .ux-card:has-text("Your to-do")', 'PARCO review & activation') && await h.has(p, O + ' .ux-card:has-text("Your to-do")', 'ready to invite from SAP'));
+  h.ok('P: end-to-end flow with 7 stages and charts', (await h.count(p, O + ' .ux-step')) === 7 && (await h.count(p, O + ' .ux-bar')) === 8);
+  await p.click(O + ' .ux-seg button:has-text("Overdue")'); await p.waitForTimeout(300);
+  h.ok('P: queue filter Overdue', (await h.count(p, O + ' .ux-card:has-text("Everything due") .ux-row')) === 1); await p.click(O + ' .ux-seg button:has-text("All")'); await p.waitForTimeout(300);
   h.ok('P: needs-attention lists due items with reminders', (await h.count(p, O + ' button:has-text("Send reminder")')) >= 4);
   h.ok('P: acting user shown', await h.has(p, 'header', 'Ayesha Khan') && await h.has(p, 'header', 'PARCO Admin'));
   await p.screenshot({ path: h.SHOTS + '/p-overview.png' });
   await actAs(p, 'Hassan Malik');
+  h.ok('P: approver dashboard is about his approvals', await h.has(p, O, 'Waiting for you') && await h.has(p, O + ' .ux-card:has-text("Your to-do")', 'PARCO-DSP-00081') && await h.has(p, O, 'Your decisions by channel'));
   h.ok('P: approver sign-in scopes the navigation', !(await h.has(p, 'aside nav', 'Finance')) && !(await h.has(p, 'aside nav', 'Setup')) && await h.has(p, 'aside nav', 'Approvals') && await h.has(p, 'header', 'Hassan Malik'));
   await goTo(p, 'Vendors');
   h.ok('P: approver has no Onboarding tab (single Vendors screen, no tab row)', !(await h.has(p, 'header', 'Onboarding')) && (await h.count(p, 'header [role=tablist]')) === 0 && (await h.count(p, '[data-screen-label="08 Vendors"]')) === 1);

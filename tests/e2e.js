@@ -25,10 +25,13 @@ async function supplierRegression(ctx) {
   ok('S: login page branded PARCO', await has(p, 'body', 'PARCO'));
   await login(p);
   const D = '[data-screen-label="02 Dashboard"]';
-  ok('S: dashboard reached', await has(p, D, 'Good morning'));
+  ok('S: dashboard reached with a personal greeting', /Good (morning|afternoon|evening), Lena/.test(await text(p, D + ' h1')));
   ok('S: vendor identity Indus / V-1000236', await has(p, D, 'Indus Technical Trading & Services (Demo)') && await has(p, D, 'V-1000236'));
-  ok('S: 5 KPI cards', (await count(p, D + ' button:has-text("info")')) === 5);
-  await p.hover(D + ' button:has-text("Open POs")'); await p.waitForTimeout(300); ok('S: KPI tooltip', (await tipText(p)).includes('Purchase orders from SAP'));
+  ok('S: 4 KPI tiles', (await count(p, D + ' .ux-tile')) === 4 && await has(p, D + ' .ux-tile.crit', 'Needs your action'));
+  await p.hover(D + ' .ux-tile:has-text("Needs your action")'); await p.waitForTimeout(300); ok('S: KPI tooltip', (await tipText(p)).includes('returned or blocked'));
+  ok('S: next steps lead with the returned and blocked invoices', (await text(p, D + ' .ux-card:has-text("Your next steps") .ux-row >> nth=0')).includes('was returned to you') && (await count(p, D + ' .ux-card:has-text("Your next steps") .ux-row')) >= 4);
+  ok('S: how-you-get-paid flow with 6 stages', (await count(p, D + ' .ux-step')) === 6);
+  ok('S: PARCO work shows approval progress', (await count(p, D + ' .ux-prog')) === 2 && (await count(p, D + ' .ux-ps.cur')) === 2);
   await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(1200);
   const W = '[data-screen-label="03 Supplier Workflow"]';
   ok('S: workflow 10 rows / 14 headers', (await count(p, W + ' tbody tr')) === 10 && (await count(p, W + ' thead th')) === 14);
@@ -46,8 +49,7 @@ async function supplierRegression(ctx) {
   await p.click('text=Documentation'); await p.waitForTimeout(800);
   ok('S: documentation guides', (await count(p, '[data-screen-label="07 Documentation"] nav a')) === 9 && await has(p, 'body', 'info@qbsco.net'));
   await p.click('text=Home'); await p.waitForTimeout(600);
-  await p.locator(D + ' :text("PO 4500012345")').first().click(); await p.waitForTimeout(900);
-  await p.click('[data-screen-label="04 PO Detail"] button:has-text("Create Invoice")'); await p.waitForTimeout(800);
+  await p.locator(D + ' .ux-row:has-text("Invoice PO 4500012345") button:has-text("Create invoice")').click(); await p.waitForTimeout(800);
   const C = '[data-screen-label="05 Create Invoice"]';
   await p.locator(C + ' :text("check_box_outline_blank")').first().click(); await p.waitForTimeout(200);
   await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400);

@@ -13,6 +13,112 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;display=block">
 <style>
+/* UX kit · shared by Supplier Portal and Tenant Admin dashboards */
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
+.ux-page{display:flex;flex-direction:column;gap:24px}
+.ux-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ux-hero h1{margin:4px 0 0;font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.ux-hero p{margin:6px 0 0;color:#5B6472;font-size:14px;max-width:720px;text-wrap:pretty}
+.ux-eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A828E}
+.ux-actions{display:flex;gap:10px;flex-wrap:wrap}
+.ux-btn{height:40px;padding-inline:16px;border-radius:8px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid #D5D9E0;background:#FFFFFF;color:#16202E;white-space:nowrap}
+.ux-btn:hover{background:#F4F5F7}
+.ux-btn .ms{font-size:20px}
+.ux-btn.primary{border-color:transparent;background:var(--brand,#0B4F9C);color:var(--on-brand,#FFFFFF)}
+.ux-btn.primary:hover{filter:brightness(1.08);background:var(--brand,#0B4F9C)}
+.ux-btn.sm{height:32px;padding-inline:12px;font-size:13px}
+.ux-btn.sm .ms{font-size:17px}
+.ux-btn.soft{border-color:transparent;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C)}
+.ux-card{background:#FFFFFF;border:1px solid #E3E6EB;border-radius:14px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.ux-card-h{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #EEF0F3;flex-wrap:wrap}
+.ux-card-h h2{margin:0;font-size:16px;font-weight:700;flex:1;min-width:0}
+.ux-card-h .ms{font-size:20px;color:var(--brand-text,#0B4F9C)}
+.ux-card-h a{font-size:13px;font-weight:700;color:var(--brand-text,#0B4F9C);text-decoration:none;display:inline-flex;align-items:center;gap:2px}
+.ux-count{min-width:22px;height:22px;padding-inline:7px;border-radius:999px;background:#EEF0F3;color:#3A4350;font-size:12px;font-weight:700;display:inline-grid;place-items:center}
+.ux-muted{font-size:12px;color:#5B6472}
+.ux-grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.ux-stack{display:flex;flex-direction:column;gap:20px;min-width:0}
+@media (max-width:1180px){.ux-grid2{grid-template-columns:minmax(0,1fr)}}
+/* KPI tiles */
+.ux-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:1180px){.ux-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ux-tile{text-align:start;background:#FFFFFF;border:1px solid #E3E6EB;border-radius:14px;padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;cursor:pointer;font:inherit;color:#16202E;min-height:168px;transition:border-color .15s,box-shadow .15s}
+.ux-tile:hover,.ux-tile:focus-visible{border-color:var(--brand,#0B4F9C);box-shadow:0 8px 24px rgba(16,24,40,.08);outline:none}
+.ux-tile .lbl{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#3A4350;line-height:1.3}
+.ux-tile .lbl .ms{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:19px;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C);flex:none}
+.ux-tile .val{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:34px;font-weight:700;line-height:1.1;letter-spacing:-.01em}
+.ux-tile .val small{font-size:14px;font-weight:600;color:#5B6472;letter-spacing:0}
+.ux-tile .sub{font-size:12.5px;color:#5B6472;line-height:1.4;text-wrap:pretty}
+.ux-tile .foot{margin-top:auto;padding-top:10px;border-top:1px solid #EEF0F3;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ux-tile .go{font-size:13px;font-weight:700;color:var(--brand-text,#0B4F9C);display:inline-flex;align-items:center;gap:2px;margin-inline-start:auto}
+.ux-tile .go .ms{font-size:18px}
+.ux-tile.crit{border-color:#F4B4AE;background:#FFFBFA}
+.ux-tile.crit .val{color:#B42318}
+.ux-tile.crit .lbl .ms{background:#FEE4E2;color:#B42318}
+.ux-tile.warn .lbl .ms{background:#FDF1DC;color:#8A5300}
+.ux-tile.good .lbl .ms{background:#E2F4E5;color:#1D6B2E}
+.ux-meter{display:block;height:6px;border-radius:999px;background:var(--brand-tint,#E7EEF8);overflow:hidden}
+.ux-meter i{display:block;height:100%;border-radius:999px;background:var(--brand,#0B4F9C)}
+/* chips */
+.ux-chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding-inline:8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:#F4F5F7;color:#3A4350}
+.ux-chip .ms{font-size:15px}
+.ux-chip.crit{background:#FEE4E2;color:#A3221B}
+.ux-chip.warn{background:#FDF1DC;color:#8A5300}
+.ux-chip.good{background:#E2F4E5;color:#1D6B2E}
+.ux-chip.info{background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C)}
+/* task rows */
+.ux-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 20px;border-top:1px solid #EEF0F3}
+.ux-card-h + .ux-row,.ux-card-h + div > .ux-row:first-child{border-top:0}
+.ux-row:hover{background:#FAFBFC}
+.ux-row .t{font-weight:700;font-size:14px;line-height:1.35}
+.ux-row .s{font-size:12.5px;color:#5B6472;line-height:1.4;text-wrap:pretty}
+.ux-row .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ux-row .end{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ux-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:21px;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C)}
+.ux-ic.crit{background:#FEE4E2;color:#B42318}
+.ux-ic.warn{background:#FDF1DC;color:#8A5300}
+.ux-ic.good{background:#E2F4E5;color:#1D6B2E}
+.ux-empty{padding:32px 20px;text-align:center;color:#5B6472;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:14px}
+.ux-empty .ms{font-size:32px;color:#1D6B2E}
+/* segmented filter */
+.ux-seg{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:#EEF0F3}
+.ux-seg button{height:28px;padding-inline:10px;border:0;border-radius:7px;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:#5B6472;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.ux-seg button.on{background:#FFFFFF;color:#16202E;box-shadow:0 1px 2px rgba(16,24,40,.1)}
+/* process flow */
+.ux-flow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);overflow-x:auto}
+.ux-step{position:relative;padding:16px 20px 18px;display:flex;flex-direction:column;gap:4px;border:0;border-inline-end:1px solid #EEF0F3;background:transparent;text-align:start;font:inherit;color:#16202E;cursor:pointer;min-width:0}
+.ux-step:last-child{border-inline-end:0}
+.ux-step:hover{background:#F9FAFB}
+.ux-step.off{cursor:default}
+.ux-step.off:hover{background:transparent}
+.ux-step .who{display:inline-flex;align-self:flex-start;align-items:center;gap:4px;height:20px;padding-inline:7px;border-radius:999px;background:#F4F5F7;font-size:11px;font-weight:700;color:#5B6472}
+.ux-step .n{font-size:28px;font-weight:700;line-height:1.15;margin-top:6px;color:#9AA2AE}
+.ux-step.hot .n{color:var(--brand-text,#0B4F9C)}
+.ux-step .t{font-size:13.5px;font-weight:700}
+.ux-step .d{font-size:12px;color:#5B6472;line-height:1.35}
+.ux-step .arrow{position:absolute;top:50%;inset-inline-end:-11px;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:#FFFFFF;border:1px solid #E3E6EB;display:grid;place-items:center;font-size:16px;color:#7A828E;z-index:1}
+/* bars (single series, direct-labelled) */
+.ux-bars{display:flex;flex-direction:column;gap:14px;padding:18px 20px 20px}
+.ux-bar{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr) auto;gap:12px;align-items:center;font-size:13px;border-radius:6px}
+.ux-bar .l{color:#3A4350;font-weight:600}
+.ux-bar .track{height:10px;border-radius:4px;background:var(--brand-tint,#E7EEF8);overflow:hidden}
+.ux-bar .fill{display:block;height:100%;border-radius:4px;background:var(--brand,#0B4F9C)}
+.ux-bar b{font-size:13px;color:#16202E;white-space:nowrap}
+.ux-bar:hover .fill{filter:brightness(1.15)}
+/* mini approval progress */
+.ux-prog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;min-width:240px}
+.ux-ps{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#7A828E;text-align:center}
+.ux-ps::before{content:'';position:absolute;top:10px;inset-inline-start:-50%;width:100%;height:2px;background:#E3E6EB}
+.ux-ps:first-child::before{display:none}
+.ux-ps .dot{position:relative;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:#FFFFFF;border:2px solid #D5D9E0;color:#FFFFFF}
+.ux-ps.done .dot{background:var(--brand,#0B4F9C);border-color:var(--brand,#0B4F9C)}
+.ux-ps.done::before,.ux-ps.cur::before{background:var(--brand,#0B4F9C)}
+.ux-ps.cur .dot{border-color:#D97706;color:#D97706;background:#FFFBEB}
+.ux-ps.cur{color:#8A5300}
+.ux-ps.bad .dot{background:#B42318;border-color:#B42318}
+.ux-ps.bad{color:#B42318}
+.ux-ps.done{color:#3A4350}
+table tbody tr{transition:background .12s}
 body{margin:0;background:#F4F5F7;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
 a{color:var(--brand-text,#0B4F9C);text-decoration:none}
@@ -364,70 +470,55 @@ input,select,textarea,button{font-family:inherit}
     <main style="flex:1;padding:28px 32px 40px;display:flex;flex-direction:column;gap:24px;min-width:0">
 
 <sc-if value="{{ is.dashboard }}" hint-placeholder-val="{{ false }}">
-  <section data-screen-label="02 Dashboard" style="display:flex;flex-direction:column;gap:24px">
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
-      <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em">Good morning, Lena</h1><p style="margin:0;color:#5B6472">Indus Technical Trading & Services (Demo) · Supplier V-1000236</p></div>
-      <div style="display:flex;gap:10px"><button onClick="{{ nav.workflow }}" style="height:40px;padding-inline:16px;border:1px solid #D5D9E0;border-radius:8px;background:#FFFFFF;font-weight:600;cursor:pointer;color:#16202E">View all documents</button><button onClick="{{ newInv }}" style="height:40px;padding-inline:16px;border:0;border-radius:8px;background:var(--brand,#0B4F9C);color:var(--on-brand,#FFFFFF);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><span style="font-family:'Material Symbols Outlined';font-size:20px">add</span>Create invoice</button></div>
+  <section data-screen-label="02 Dashboard" class="ux-page">
+    <div class="ux-hero">
+      <div><span class="ux-eyebrow">{{ dash.date }} · Supplier {{ dash.vid }}</span><h1>{{ dash.greet }}</h1><p>{{ dash.vname }} · {{ dash.blurb }}</p></div>
+      <div class="ux-actions"><button class="ux-btn" onClick="{{ nav.workflow }}"><span class="ms">account_tree</span>Open workflow</button><button class="ux-btn primary" onClick="{{ newInv }}"><span class="ms">add</span>Create invoice</button></div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
-      <sc-for list="{{ dash.kpis }}" as="k" hint-placeholder-count="5">
-        <button onClick="{{ k.go }}" data-tip="{{ k.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}" style="text-align:start;background:#FFFFFF;border:1px solid {{ k.bd }};border-radius:12px;padding:16px 18px 14px;display:flex;flex-direction:column;gap:12px;cursor:pointer;min-height:156px;box-shadow:0 1px 2px rgba(16,24,40,.04)" style-hover="border-color:var(--brand,#0B4F9C);box-shadow:0 6px 18px rgba(16,24,40,.08)">
-          <div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:9px;background:{{ k.ib }};color:{{ k.ic }};display:grid;place-items:center;font-family:'Material Symbols Outlined';font-size:19px;flex:none">{{ k.icon }}</span><span style="flex:1;font-size:13px;font-weight:600;color:#3A4350;line-height:1.25">{{ k.label }}</span><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:18px;color:#9AA2AE">info</span></div>
-          <sc-if value="{{ k.hasCount }}" hint-placeholder-val="{{ true }}"><span style="font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em">{{ k.count }}</span></sc-if>
-          <sc-if value="{{ k.hasAmounts }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:3px"><sc-for list="{{ k.amounts }}" as="a" hint-placeholder-count="2"><div style="display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums"><span style="font-size:20px;font-weight:700;line-height:1.15">{{ a.amt }}</span><span style="font-size:12px;font-weight:600;color:#5B6472">{{ a.cur }}</span></div></sc-for></div></sc-if>
-          <div style="margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid #EEF0F3"><span style="font-size:12px;color:{{ k.subC }};font-weight:{{ k.subW }};line-height:1.35;text-wrap:pretty">{{ k.sub }}</span><span role="img" aria-label="{{ k.cta }}" style="width:24px;height:24px;border-radius:6px;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C);display:grid;place-items:center;font-family:'Material Symbols Outlined';font-size:18px;flex:none">{{ fwd }}</span></div>
-        </button>
-      </sc-for>
+
+    <div class="ux-kpis">
+      <sc-for list="{{ dash.kpis }}" as="k" hint-placeholder-count="4"><button class="{{ k.cls }}" onClick="{{ k.go }}" data-tip="{{ k.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}">
+        <span class="lbl"><span class="ms">{{ k.i }}</span>{{ k.l }}</span>
+        <span class="val">{{ k.v }}<sc-if value="{{ k.hasUnit }}" hint-placeholder-val="{{ false }}"><small>{{ k.unit }}</small></sc-if></span>
+        <span class="sub">{{ k.sub }}</span>
+        <span class="foot"><sc-if value="{{ k.hasPill }}" hint-placeholder-val="{{ false }}"><span class="{{ k.pillCls }}"><span class="ms">{{ k.pillI }}</span>{{ k.pillT }}</span></sc-if><sc-if value="{{ k.hasMore }}" hint-placeholder-val="{{ false }}"><span class="ux-chip info">{{ k.more }}</span></sc-if><span class="go">{{ k.cta }}<span class="ms">{{ fwd }}</span></span></span>
+      </button></sc-for>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;align-items:stretch">
-      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;display:flex;flex-direction:column">
-        <div style="padding:16px 18px;border-bottom:1px solid #EEF0F3;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#B42318">priority_high</span><h2 style="margin:0;font-size:16px;font-weight:700;flex:1">Action required</h2></div>
-        <sc-if value="{{ dash.hasActions }}" hint-placeholder-val="{{ true }}">
-          <sc-for list="{{ dash.actions }}" as="a" hint-placeholder-count="2">
-            <div style="padding:16px 18px;border-bottom:1px solid #EEF0F3;display:flex;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">{{ a.ref }}</b><dc-import name="StatusTag" status="{{ a.st }}" hint-size="140px,24px"></dc-import><span style="margin-inline-start:auto;font-weight:700;font-variant-numeric:tabular-nums">{{ a.amt }}</span></div>
-              <span style="font-size:12px;color:#5B6472">{{ a.sub }}</span>
-              <p style="margin:0;font-size:13px;color:#3A4350;text-wrap:pretty">{{ a.reason }}</p>
-              <div><button onClick="{{ a.open }}" style="height:34px;padding-inline:12px;border:1px solid var(--brand,#0B4F9C);border-radius:8px;background:#FFFFFF;color:var(--brand-text,#0B4F9C);font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><span style="font-family:'Material Symbols Outlined';font-size:18px">upload_file</span>{{ a.cta }}</button></div>
-            </div>
-          </sc-for>
-        </sc-if>
-        <sc-if value="{{ dash.noActions }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 18px;text-align:center;color:#5B6472;display:flex;flex-direction:column;gap:6px;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:28px;color:#1D6B2E">task_alt</span>Nothing needs your attention right now.</div></sc-if>
+
+    <div class="ux-grid2">
+      <div class="ux-card">
+        <div class="ux-card-h"><span class="ms">checklist</span><h2>Your next steps</h2><span class="ux-count">{{ dash.stepsN }}</span></div>
+        <sc-for list="{{ dash.steps }}" as="r" hint-placeholder-count="4"><div class="ux-row">
+          <span class="{{ r.icCls }}">{{ r.i }}</span>
+          <span style="display:flex;flex-direction:column;min-width:0"><span class="t">{{ r.t }}</span><span class="s">{{ r.s }}</span><sc-if value="{{ r.hasDue }}" hint-placeholder-val="{{ false }}"><span class="meta"><span class="ux-chip" data-tip="Due On · {{ r.dueT }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" style="background:{{ r.due.bg }};color:{{ r.due.fg }}"><span class="ms">{{ r.due.icon }}</span>{{ r.due.label }}</span></span></sc-if></span>
+          <span class="end"><button class="{{ r.btnCls }}" onClick="{{ r.go }}">{{ r.cta }}<span class="ms">{{ fwd }}</span></button></span>
+        </div></sc-for>
+        <sc-if value="{{ dash.stepsEmpty }}" hint-placeholder-val="{{ false }}"><div class="ux-empty"><span class="ms">task_alt</span><b style="color:#16202E">You are all caught up</b><span>Nothing needs you right now.</span></div></sc-if>
       </div>
-      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;display:flex;flex-direction:column">
-        <div style="padding:16px 18px;border-bottom:1px solid #EEF0F3;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#6B2FA0">event_upcoming</span><h2 style="margin:0;font-size:16px;font-weight:700;flex:1">Upcoming payments</h2><a href="#" onClick="{{ nav.payments }}" style="font-size:13px;font-weight:600">Payment Insight</a></div>
-        <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr);padding:10px 18px;font-size:12px;font-weight:600;color:#5B6472;background:#F9FAFB;border-bottom:1px solid #EEF0F3"><span>Invoice</span><span>Due date</span><span style="text-align:end">Gross</span></div>
-        <sc-for list="{{ dash.upcoming }}" as="u" hint-placeholder-count="5">
-          <a href="#" onClick="{{ u.open }}" style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr);gap:8px;padding:12px 18px;border-bottom:1px solid #EEF0F3;color:#16202E;text-decoration:none;align-items:center" style-hover="background:#F9FAFB;text-decoration:none">
-            <span style="display:flex;flex-direction:column;min-width:0"><b style="font-size:13px">{{ u.ref }}</b><span style="font-size:12px;color:#5B6472">{{ u.sap }}</span></span>
-            <span style="display:flex;flex-direction:column"><span style="font-size:13px">{{ u.due }}</span><span data-tip="{{ u.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}" style="font-size:12px;font-weight:600;color:{{ u.noteColor }}">{{ u.note }}</span></span>
-            <span style="text-align:end;font-variant-numeric:tabular-nums;font-weight:700">{{ u.amt }} <span style="font-weight:600;color:#5B6472;font-size:12px">{{ u.cur }}</span></span>
-          </a>
-        </sc-for>
+      <div class="ux-card">
+        <div class="ux-card-h"><span class="ms">event_upcoming</span><h2>Upcoming payments</h2><a href="#" onClick="{{ nav.payments }}">Payment Insight<span class="ms" style="font-size:18px">{{ fwd }}</span></a></div>
+        <sc-for list="{{ dash.upcoming }}" as="u" hint-placeholder-count="5"><a href="#" onClick="{{ u.open }}" class="ux-row" style="grid-template-columns:minmax(0,1fr) auto;color:#16202E;text-decoration:none">
+          <span style="display:flex;flex-direction:column;min-width:0"><span class="t" style="font-size:13.5px">{{ u.ref }}</span><span class="meta"><span class="ux-chip" data-tip="{{ u.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" style="background:{{ u.chipBg }};color:{{ u.noteColor }}"><span class="ms">{{ u.chipI }}</span>{{ u.note }}</span><span class="ux-muted">Due {{ u.due }}</span></span></span>
+          <span style="text-align:end;font-weight:700;white-space:nowrap">{{ u.amt }} <span class="ux-muted" style="font-weight:600">{{ u.cur }}</span></span>
+        </a></sc-for>
       </div>
     </div>
+
+    <div class="ux-card">
+      <div class="ux-card-h"><span class="ms">route</span><h2>How your work gets paid</h2><span class="ux-muted">Each stage shows who acts next · click to open it</span></div>
+      <div class="ux-flow"><sc-for list="{{ dash.flow }}" as="f" hint-placeholder-count="6"><button class="{{ f.cls }}" onClick="{{ f.go }}" data-tip="{{ f.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}"><span class="who"><span class="ms" style="font-size:13px">{{ f.wi }}</span>{{ f.who }}</span><span class="n">{{ f.n }}</span><span class="t">{{ f.t }}</span><span class="d">{{ f.d }}</span><sc-if value="{{ f.arrow }}" hint-placeholder-val="{{ true }}"><span class="arrow ms">{{ fwd }}</span></sc-if></button></sc-for></div>
+    </div>
+
     <sc-if value="{{ dash.ops.show }}" hint-placeholder-val="{{ true }}">
-    <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px;overflow:hidden">
-      <div style="padding:16px 18px;border-bottom:1px solid #EEF0F3;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--brand-text,#0B4F9C)">fact_check</span><h2 style="margin:0;font-size:16px;font-weight:700;flex:1">Supply &amp; services with PARCO</h2><span style="font-size:12px;color:#5B6472">Enabled: <b style="color:#16202E">{{ dash.ops.cap }}</b> · {{ dash.ops.svcs }}</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:14px 18px"><sc-for list="{{ dash.ops.cards }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.go }}" style="text-align:start;display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #E3E6EB;border-radius:10px;background:#FFFFFF;cursor:pointer" style-hover="border-color:var(--brand,#0B4F9C)"><span style="width:34px;height:34px;border-radius:9px;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C);display:grid;place-items:center;font-family:'Material Symbols Outlined';font-size:19px">{{ c.i }}</span><span style="display:flex;flex-direction:column"><b style="font-size:20px;line-height:1">{{ c.v }}</b><span style="font-size:12px;color:#5B6472">{{ c.l }}</span></span></button></sc-for></div>
-      <sc-for list="{{ dash.ops.items }}" as="x" hint-placeholder-count="3"><a href="#" onClick="{{ x.go }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 18px;border-top:1px solid #EEF0F3;align-items:center;color:#16202E;text-decoration:none" style-hover="background:#F9FAFB;text-decoration:none"><span style="display:flex;flex-direction:column"><b style="font-size:13px">{{ x.kind }}</b><span style="font-size:12px;color:#5B6472">{{ x.sub }}</span></span><span data-tip="Due On · {{ x.dueT }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}" style="display:inline-flex;gap:4px;align-items:center;height:22px;padding-inline:8px;border-radius:999px;background:{{ x.due.bg }};color:{{ x.due.fg }};font-weight:700;font-size:11px;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:14px">{{ x.due.icon }}</span>{{ x.due.label }}</span></a></sc-for>
-      <sc-if value="{{ dash.ops.noItems }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 18px;font-size:13px;color:#5B6472;border-top:1px solid #EEF0F3">Nothing pending with PARCO.</div></sc-if>
+    <div class="ux-card">
+      <div class="ux-card-h"><span class="ms">fact_check</span><h2>Supply &amp; services with PARCO</h2><span class="ux-muted">Enabled: <b style="color:#16202E">{{ dash.ops.cap }}</b> · {{ dash.ops.svcs }}</span></div>
+      <sc-for list="{{ dash.work }}" as="w" hint-placeholder-count="3"><a href="#" onClick="{{ w.go }}" class="ux-row" style="grid-template-columns:40px minmax(0,1fr) minmax(260px,320px);color:#16202E;text-decoration:none">
+        <span class="ux-ic ms">{{ w.i }}</span>
+        <span style="display:flex;flex-direction:column;min-width:0"><span class="t">{{ w.id }} <span class="ux-muted" style="font-weight:600">{{ w.ver }}</span></span><span class="s">{{ w.ref }}</span><span class="meta"><span class="ux-chip" style="background:{{ w.st.bg }};color:{{ w.st.fg }}"><span class="ms">{{ w.st.icon }}</span>{{ w.st.label }}</span></span></span>
+        <span class="ux-prog"><sc-for list="{{ w.prog }}" as="p" hint-placeholder-count="4"><span class="{{ p.cls }}"><span class="dot ms">{{ p.icon }}</span>{{ p.l }}</span></sc-for></span>
+      </a></sc-for>
+      <sc-if value="{{ dash.noWork }}" hint-placeholder-val="{{ false }}"><div class="ux-empty" style="padding:20px">No supply or service submissions yet.</div></sc-if>
     </div></sc-if>
-    <sc-if value="{{ dash.hasOpenPos }}" hint-placeholder-val="{{ true }}">
-      <div style="background:#FFFFFF;border:1px solid #E3E6EB;border-radius:12px">
-        <div style="padding:16px 18px;border-bottom:1px solid #EEF0F3;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--brand-text,#0B4F9C)">description</span><h2 style="margin:0;font-size:16px;font-weight:700">Purchase orders ready to invoice</h2></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-          <sc-for list="{{ dash.openPos }}" as="p" hint-placeholder-count="2">
-            <div style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;border-inline-end:1px solid #EEF0F3">
-              <a href="#" onClick="{{ p.open }}" style="font-weight:700;font-size:15px">PO {{ p.no }}</a>
-              <span style="font-size:13px;color:#5B6472">{{ p.desc }}</span>
-              <span style="font-size:12px;color:#5B6472">Open to invoice: <b style="color:#16202E;font-variant-numeric:tabular-nums">{{ p.amt }} {{ p.cur }}</b></span>
-              <div style="padding-top:4px"><button onClick="{{ p.create }}" style="height:34px;padding-inline:12px;border:0;border-radius:8px;background:var(--brand-tint,#E7EEF8);color:var(--brand-text,#0B4F9C);font-weight:700;font-size:13px;cursor:pointer">Create invoice</button></div>
-            </div>
-          </sc-for>
-        </div>
-      </div>
-    </sc-if>
   </section>
 </sc-if>
 
@@ -1392,7 +1483,36 @@ class Component extends DCLogic {
      {label:'Outstanding amount',icon:'account_balance_wallet',count:'',hasCount:false,hasAmounts:true,amounts:this.byCur(outs,r=>r.gross),sub:outs.length+' invoices not yet paid',go:()=>this.go('payments',{payTab:'outstanding'}),ic:'#6B2FA0',ib:'#F3EAFB',tip:'Gross value of invoices that are posted or still in process and not yet paid by SAP, per currency.',cta:'View outstanding',bd:'#E3E6EB',subC:'#5B6472',subW:'500'}];
     const actions=inv.filter(r=>['inv_returned','inv_blocked'].includes(r.st)).map(r=>({ref:r.ref,st:r.st,sub:(r.sap?r.sap+' / '+r.fy+' · ':'')+'PO '+(r.po||'—'),reason:r.st==='inv_blocked'?this.rowBlock(r).detail:r.reason,title:r.st==='inv_blocked'?'Blocked: '+this.rowBlock(r).code:'Returned: action needed',cta:'Upload corrected invoice',amt:this.fa(r.gross,r.cur)+' '+r.cur,open:()=>this.go('invoice',{selInv:r.id,resubOpen:true})}));
     const upcoming=outs.filter(r=>r.due).sort((a,b)=>a.due<b.due?-1:1).map(r=>{const od=diffD(TODAY,r.due);return{ref:r.ref,sap:r.sap?r.sap+' / '+r.fy:'Not yet in SAP',due:this.fd(r.due),note:r.st==='inv_blocked'?'On hold':(od>0?od+' days overdue':'Due in '+(-od)+' days'),tip:r.st==='inv_blocked'?'Payment is on hold until the block is resolved.':(od>0?'The due date passed '+od+' days ago. Payment is made by the next SAP payment run after posting.':'Due in '+(-od)+' days, calculated from the invoice date and the PO payment terms.'),noteColor:r.st==='inv_blocked'?'#B42318':(od>0?'#9A3F07':'#5B6472'),amt:this.fa(r.gross,r.cur),cur:r.cur,st:r.st,open:()=>this.go('invoice',{selInv:r.id})};});
-    return{kpis,actions,hasActions:actions.length>0,noActions:actions.length===0,upcoming,openPos,hasOpenPos:openPos.length>0,ops:this.opsV()};}
+    const d=PARCO.load(),V=this.vctx(),subsAll=d.submissions.filter(x=>x.vendorId===VENDOR),crs=d.clientRequests.filter(c=>c.vendorId===VENDOR&&c.status==='OPEN');
+    const pend=subsAll.filter(x=>x.status==='PENDING_L1'||x.status==='PENDING_L2'),rdy=subsAll.filter(x=>x.status==='READY_FOR_INVOICE'),rjs=subsAll.filter(x=>x.status.indexOf('REJECTED')===0),aws=subsAll.filter(x=>x.status==='APPROVED_AWAITING_SAP');
+    const goS=x=>()=>this.go(x.type==='SUPPLY'?'supply':'services',{subSel:x.id});const pl=(n,w)=>n+' '+w+(n===1?'':'s');
+    const steps=[];
+    actions.forEach(a=>steps.push({i:'error',tone:'crit',t:a.st==='inv_blocked'?'Invoice '+a.ref+' is blocked for payment':'Invoice '+a.ref+' was returned to you',s:a.reason,hasDue:false,due:{},dueT:'',cta:'Fix invoice',go:a.open}));
+    rjs.forEach(x=>steps.push({i:'undo',tone:'crit',t:(x.type==='SUPPLY'?'Dispatch ':'Service work ')+x.id+' was rejected by PARCO',s:'Read the reason, correct it and resubmit.',hasDue:false,due:{},dueT:'',cta:'Resubmit',go:goS(x)}));
+    crs.forEach(c=>steps.push({i:'assignment',tone:'',t:'Submit service work for '+c.id,s:PARCO.service(c.serviceId).name+' · '+c.site,hasDue:true,due:PARCO.dueBadge(c.dueOn),dueT:this.fd(c.dueOn),cta:'Submit work',go:()=>this.go('services',{})}));
+    rdy.forEach(x=>steps.push({i:'receipt_long',tone:'good',t:'Invoice '+x.id,s:(x.type==='SUPPLY'?'Goods receipt ':'Service entry sheet ')+(x.sapDoc||'')+' confirmed in SAP',hasDue:false,due:{},dueT:'',cta:'Create invoice',go:goS(x)}));
+    openPos.forEach(p=>steps.push({i:'description',tone:'',t:'Invoice PO '+p.no,s:p.amt+' '+p.cur+' received and not invoiced yet · '+p.desc,hasDue:false,due:{},dueT:'',cta:'Create invoice',go:p.create}));
+    steps.forEach(x=>{x.icCls='ux-ic ms'+(x.tone?' '+x.tone:'');x.btnCls='ux-btn sm '+(x.tone==='crit'?'primary':'soft');});
+    const cpt=(n,c)=>n>=1e6?(Math.round(n/1e4)/100).toLocaleString('en-US')+'M':(n>=1e4?(Math.round(n/100)/10).toLocaleString('en-US')+'K':this.fa(n,c));
+    const money=(arr,f)=>{const m={};arr.forEach(r=>{const v=f(r);if(v==null)return;m[r.cur]=(m[r.cur]||0)+v;});const a=Object.keys(m).map(c=>({cur:c,n:m[c],amt:this.fa(m[c],c)})).sort((x,y)=>(y.cur==='PKR')-(x.cur==='PKR'));return{first:a[0]?{amt:cpt(a[0].n,a[0].cur),cur:a[0].cur}:{amt:'0',cur:''},rest:a.slice(1),all:a.map(x=>x.amt+' '+x.cur).join(' · ')||'none'};};
+    const in30=outs.filter(r=>r.due&&r.st!=='inv_blocked'&&diffD(TODAY,r.due)>=-30),m30=money(in30,r=>r.gross),mp=money(paid,r=>r.gross-(r.wht||0));
+    const PILL={crit:['error','Needs action'],warn:['schedule','Waiting'],good:['check_circle','On track']};
+    const tile=(i,l,v,o)=>{const p=PILL[o.tone];return{i,l,v:String(v),unit:o.unit||'',hasUnit:!!o.unit,sub:o.sub,cls:'ux-tile'+(o.tone?' '+o.tone:''),hasPill:!!p,pillCls:'ux-chip '+(o.tone||''),pillI:p?p[0]:'',pillT:p?p[1]:'',hasMore:!!o.more,more:o.more||'',cta:o.cta,go:o.go,tip:o.tip};};
+    const nAct=actions.length+rjs.length,nWait=pend.length+aws.length+rev.length;
+    const K=[tile('priority_high','Needs your action',nAct,{tone:nAct?'crit':'good',sub:nAct?'Returned or blocked invoices and rejected work':'Nothing is blocked or returned',cta:nAct?'Fix now':'Documents',go:()=>this.go('workflow',{tab:'action'}),tip:'Invoices SAP or PARCO returned or blocked, and supply or service work PARCO rejected. Each one explains what to do.'}),
+      tile('hourglass_top','Waiting on PARCO',nWait,{tone:nWait?'warn':'',sub:pl(pend.length+aws.length,'approval')+' · '+pl(rev.length,'invoice')+' in review',cta:'Track',go:()=>this.go('workflow',{tab:'process'}),tip:'Work waiting for the two PARCO approvers or SAP confirmation, and invoices SAP or PARCO Finance is reviewing. Nothing for you to do yet.'}),
+      tile('event_upcoming','Due to you · next 30 days',m30.first.amt,{unit:m30.first.cur,more:m30.rest.length?'+'+pl(m30.rest.length,'currency').replace('currencys','currencies'):'',sub:pl(in30.length,'invoice')+' due by '+this.fd(new Date(Date.parse(TODAY)+30*864e5).toISOString().slice(0,10)),cta:'Payments',go:()=>this.go('payments',{payTab:'outstanding'}),tip:'Gross value of posted or in-process invoices due within 30 days, per currency: '+m30.all+'.'}),
+      tile('paid','Paid this month',mp.first.amt,{unit:mp.first.cur,more:mp.rest.length?'+'+pl(mp.rest.length,'currency').replace('currencys','currencies'):'',sub:pl(paid.length,'invoice')+' · net of withholding tax',cta:'Remittances',go:()=>this.go('payments',{payTab:'paid'}),tip:'Net amount SAP payment runs transferred to you this month, after withholding tax, per currency: '+mp.all+'.'})];
+    const sched=outs.filter(r=>['inv_posted','inv_scheduled'].includes(r.st));
+    const FL=(V.supply||V.services?[['local_shipping','You → PARCO','Awaiting approval',pend.length,'Two PARCO approvers, Level 1 then Level 2',()=>this.go(V.supply?'supply':'services')],['dns','SAP','Awaiting SAP',aws.length,'Goods receipt or service entry sheet',()=>this.go(V.supply?'supply':'services')]]:[]).concat([['edit_document','You','Ready to invoice',rdy.length+openPos.length,'SAP confirmed, not invoiced yet',()=>this.go('workflow',{tab:'all'})],['manage_search','PARCO Finance','Invoices in review',rev.length,'Submitted, parked or in review',()=>this.go('workflow',{tab:'process'})],['event_available','SAP','Posted, awaiting payment',sched.length,'Paid by due date in a payment run',()=>this.go('payments',{payTab:'outstanding'})],['account_balance','Bank','Paid this month',paid.length,'Remittance advice available',()=>this.go('payments',{payTab:'paid'})]]);
+    const flow=FL.map((f,i)=>({wi:f[0],who:f[1],t:f[2],n:String(f[3]),d:f[4],go:f[5],tip:f[2]+': '+f[3]+'. '+f[4]+'. Click to open.',cls:'ux-step'+(f[3]>0?' hot':''),arrow:i<FL.length-1}));
+    const tasksOf=x=>d.tasks.filter(t=>t.submissionId===x.id&&t.submissionVersion===x.version);
+    const ps=t=>!t?'todo':(t.status==='APPROVED'?'done':(t.status==='PENDING'?'cur':(t.status==='REJECTED'?'bad':'todo')));
+    const IC={done:'check',cur:'more_horiz',bad:'close',todo:''};
+    const work=subsAll.slice().sort((a,b)=>(b.submittedAt||'')<(a.submittedAt||'')?-1:1).slice(0,4).map(x=>{const r=this.subRowS(x),T=tasksOf(x);const st=[['done','Submitted'],[ps(T.find(t=>t.level===1)),'Level 1'],[ps(T.find(t=>t.level===2)),'Level 2'],[x.status==='READY_FOR_INVOICE'?'done':(x.status==='APPROVED_AWAITING_SAP'?'cur':'todo'),x.type==='SUPPLY'?'SAP GR':'SAP SES']];return{i:x.type==='SUPPLY'?'local_shipping':'engineering',id:x.id,ver:r.ver,ref:(x.type==='SUPPLY'?'Dispatch · ':'Service work · ')+r.ref,st:r.st,go:goS(x),prog:st.map(s=>({cls:'ux-ps '+s[0],icon:IC[s[0]],l:s[1]}))};});
+    const h=new Date().getHours(),first=VUSER.replace(' (Demo)','').split(' ')[0];
+    const up=upcoming.slice(0,5).map(u=>Object.assign({},u,{chipBg:u.st==='inv_blocked'?'#FEE4E2':(u.noteColor==='#9A3F07'?'#FFF1E6':'#F4F5F7'),chipI:u.st==='inv_blocked'?'block':(u.noteColor==='#9A3F07'?'error':'schedule')}));
+    return{kpis:K,steps:steps.slice(0,6),stepsN:String(steps.length),stepsEmpty:steps.length===0,upcoming:up,flow,work,noWork:work.length===0,ops:this.opsV(),greet:(h<12?'Good morning':(h<17?'Good afternoon':'Good evening'))+', '+first,vname:V.v.name,vid:VENDOR,date:this.fd(TODAY),blurb:nAct?'Start with the items marked Needs action.':'Everything is moving. Here is what happens next.',actions,hasActions:actions.length>0,noActions:actions.length===0,openPos,hasOpenPos:openPos.length>0};}
 
   wfV(){const st=this.state;const tabDef=TABS.find(t=>t[0]===st.tab)||TABS[0];let rows=this.allRows();const q=st.q.trim().toLowerCase();
     const F=st.f;const fromI=this.pdt(F.from)||'',toI=this.pdt(F.to)||'';const amt=r=>r.gross??r.net??0;const base=rows.filter(r=>!q||[r.sap,r.po,r.ref,r.desc].join(' ').toLowerCase().includes(q)).filter(r=>!Object.keys(st.types).some(k=>st.types[k])||st.types[r.type])

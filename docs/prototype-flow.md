@@ -31,7 +31,7 @@ Use the IDs as node names.
 | S08 | Secure your account | 01 Onboarding · 2FA setup | Step 2 of 2: QR code, authenticator code. |
 | S09 | Link expired | 01 Auth · Link expired | Invitation / reset link expired or used. |
 | S10 | Welcome modal | (over Dashboard) | First-time hints after onboarding. |
-| S11 | Home / Dashboard | 02 Dashboard | KPIs, action required, upcoming payments, POs ready to invoice. |
+| S11 | Home / Dashboard | 02 Dashboard | Personal greeting; four KPI tiles (Needs your action, Waiting on PARCO, Due to you in 30 days, Paid this month); *Your next steps* list with one button per item (fix returned/blocked invoices, resubmit rejected work, submit service work, invoice SAP-confirmed work and open POs); upcoming payments; *How your work gets paid* stage strip with counts; PARCO supply & service work with Submitted → Level 1 → Level 2 → SAP progress. |
 | S12 | Workflow · SAP documents | 03 Supplier Workflow | First tab of the single Workflow screen. All SAP documents: tabs, search, filters, sort, pagination, export. |
 | S13 | PO Detail | 04 PO Detail | Header, lines with open-to-invoice qty, linked documents. |
 | S14 | GR Detail | 04 GR Detail | Read-only goods receipt (material document). |
@@ -57,7 +57,7 @@ Use the IDs as node names.
 | A03 | Supplier management | SAP suppliers and portal access; invite flow (3-step modal). |
 | A04 | Monitoring | KPI cards and exception queue (blocked, returned, sync failed). |
 | A05 | Admin users & roles | Roles and admin user list. |
-| A06 | Overview | PARCO KPIs, needs-attention list with Due On and Send reminder, recent activity. |
+| A06 | Overview | Role-based dashboard. Greeting and the role's main action; four KPI tiles chosen for the signed-in role (Admin: review, waiting for vendors, active vendors, overdue · Finance: invoices to review, scheduled for payment, ATL gaps, overdue · Approvers: waiting for you, due today, with the other approver, decided by you · Concerned Person: your vendors, help requests, on-behalf uploads, overdue); *How vendor work moves through PARCO* seven-stage strip showing who acts next; *Your to-do*; two single-series bar charts per role (onboarding funnel, invoice value by status, work by stage, decisions by channel, ATL status); *Everything due* queue with All / Overdue / Mine filter and Send reminder; recent activity. |
 | A07 | Vendor Onboarding | Requests with shared channel status; Invite vendor wizard (5 steps); detail with channel cards, reminders, revoke, review & activate, Concerned Person assignment, SAP-prefilled form, activity. |
 | A08 | Vendors | SAP vendor master with profile, ATL check, capability changes, Concerned Person, people, contact & activity log, invoices and submissions, on-behalf upload entry. |
 | A09 | Supply Approvals / Service Approvals | Submissions with Level 1 / Level 2 stepper, Accept / Reject in app, email action preview, reminders, SAP confirmation (simulated), client requests (services). |
@@ -125,12 +125,12 @@ Available on every signed-in screen (S11–S22).
 
 ```mermaid
 flowchart TD
-  S11[S11 Dashboard] -->|KPI Open POs / Under review / Blocked| S12[S12 Supplier Workflow tab]
-  S11 -->|KPI Paid / Outstanding| S19[S19 Payment Insight tab]
-  S11 -->|Action required item| S18b[S18 Invoice Detail · resubmit panel open]
+  S11[S11 Dashboard] -->|KPI Needs your action / Waiting on PARCO| S12[S12 Workflow · SAP documents tab]
+  S11 -->|KPI Due in 30 days / Paid this month| S19[S19 Payment Insight tab]
+  S11 -->|Next step · Fix invoice| S18b[S18 Invoice Detail · resubmit panel open]
   S11 -->|Upcoming payment row| S18[S18 Invoice Detail]
-  S11 -->|PO ready to invoice · open| S13[S13 PO Detail]
-  S11 -->|PO ready to invoice · Create invoice| S16[S16 Create Invoice step 1 · PO preselected]
+  S11 -->|Next step · Invoice PO · Create invoice| S16[S16 Create Invoice step 1 · PO preselected]
+  S11 -->|Next step · Submit work / Resubmit · flow stage| S25[S25 / S26 Supply dispatches or Service work tab]
   S12 -->|row type PO| S13
   S12 -->|row type GR| S14[S14 GR Detail]
   S12 -->|row type SES| S15[S15 SES Detail]
@@ -379,10 +379,12 @@ flowchart TD
 | S10 | Read the guide | S22 Documentation |
 | S09 Link expired | Back to log in | S01 |
 | Any signed-in screen | Log out | S01 |
-| S11 | KPI card | S12 tab or S19 tab |
-| S11 | Action required item | S18 (resubmit open) |
+| S11 | KPI tile | S12 tab or S19 tab |
+| S11 | Next step · Fix invoice | S18 (resubmit open) |
+| S11 | Next step · Create invoice | S16 |
+| S11 | Next step · Submit work / Resubmit | S25 / S26 |
 | S11 | Upcoming payment row | S18 |
-| S11 | PO ready to invoice | S13 or S16 |
+| S11 | Flow stage | S12, S19, S25 or S26 |
 | S12 | Row (PO / GR / SES / INV / CM) | S13 / S14 / S15 / S18 |
 | S12 | Create invoice | S16 |
 | S13 | Create Invoice (open qty > 0) | S16 step 1 |
