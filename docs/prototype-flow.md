@@ -5,8 +5,8 @@ Three pages ship in `public/`:
 
 | Page | File | User | Sample identity |
 |---|---|---|---|
-| Supplier Portal | `index.html` | Supplier user | Lena Marsh, Northline Industrial Supplies LLC (supplier 1000234) at tenant Demo Buyer Co. |
-| Tenant Admin | `admin.html` | Buyer's AP / procurement admin | Amal Khoury, AP Manager, Tenant admin role |
+| Supplier Portal | `index.html` | Vendor user | Lena Marsh (Demo), Vendor Organization Admin of Indus Technical Trading & Services (Demo), V-1000236, at tenant PARCO — Pakistan |
+| Tenant Admin | `admin.html` | PARCO staff | Ayesha Khan (PARCO Admin) by default; switch to Finance, Approver 1 / 2 or Concerned Person from the Prototype dock |
 | Design System & Change Log | `design-system.html` | Reference only | Status tags, theme tokens, theme demo, change log, acceptance checklist |
 
 Every Mermaid block below renders on GitHub. Section 10 repeats the same edges as a flat table for Figma / FigJam / Miro.
@@ -43,6 +43,10 @@ Use the IDs as node names.
 | S20 | Notifications | 07 Notifications | In-app list plus email template preview. |
 | S21 | Profile | 07 Profile | Read-only supplier data, request change, portal users. |
 | S22 | Documentation | 07 Documentation | Nine in-app guides (getting started, invoice, credit memo, standalone, statuses, blocked reasons, payments, users, formats) with a button into the related screen. |
+| S23 | Onboarding · magic link form | 01 Onboarding · Magic Link | Public page from the invitation link: SAP-prefilled review, acknowledgement, Accept / Reject. Shares one status with S24. |
+| S24 | Onboarding · email action | 01 Onboarding · Email Action | Public verified decision page opened from the (simulated) email. Shares one status with S23. |
+| S25 | Supply Workflow | 03 Supply Workflow | Dispatch against SAP POs, evidence, two-person PARCO approval timeline, SAP GR status, resubmission. |
+| S26 | Services Workflow | 03 Services Workflow | Enabled services, PARCO client requests, service work submission, approval timeline, SES status. |
 
 ### Tenant Admin
 
@@ -53,6 +57,14 @@ Use the IDs as node names.
 | A03 | Supplier management | SAP suppliers and portal access; invite flow (3-step modal). |
 | A04 | Monitoring | KPI cards and exception queue (blocked, returned, sync failed). |
 | A05 | Admin users & roles | Roles and admin user list. |
+| A06 | Overview | PARCO KPIs, needs-attention list with Due On and Send reminder, recent activity. |
+| A07 | Vendor Onboarding | Requests with shared channel status; Invite vendor wizard (5 steps); detail with channel cards, reminders, revoke, review & activate, Concerned Person assignment, SAP-prefilled form, activity. |
+| A08 | Vendors | SAP vendor master with profile, ATL check, capability changes, Concerned Person, people, contact & activity log, invoices and submissions, on-behalf upload entry. |
+| A09 | Supply Approvals / Service Approvals | Submissions with Level 1 / Level 2 stepper, Accept / Reject in app, email action preview, reminders, SAP confirmation (simulated), client requests (services). |
+| A10 | Services Master Data | SAP service catalogue, eligibility, PARCO drafts. |
+| A11 | Assigned Vendors | Concerned Person view: assigned vendors, Upload invoice on behalf, notes. |
+| A12 | Finance & Invoices / Payment Insight | All vendor invoices with uploader attribution, ATL, WHT, status actions, View / Download PDF. |
+| A13 | Notifications & Reminders / Audit & Contact Logs / Email Action | Due items with reminders and history; immutable audit with filters and CSV export; standalone approver decision page. |
 
 ---
 
@@ -322,7 +334,34 @@ erDiagram
 
 ---
 
-## 10. Flat edge list (for diagram tools)
+## 10. PARCO flows
+
+```mermaid
+flowchart TD
+  A07[A07 Admin · Invite vendor wizard] -->|Send invitation| REQ[Onboarding request · one shared status]
+  REQ -->|magic link| S23[S23 Portal form]
+  REQ -->|email action| S24[S24 Email page]
+  S23 -->|Accept / Reject| DEC[decideOnboarding · first decision wins]
+  S24 -->|Accept / Reject| DEC
+  DEC -->|other channel locked| REQ
+  DEC -->|Vendor accepted| REV[A07 PARCO review]
+  REV -->|Activate| ACT[Vendor active]
+  REV -->|Request correction| REQ
+  ACT -->|Assign| CP[Concerned Person]
+  S25[S25 Supply dispatch] -->|Submit| L1[Level 1 task]
+  S26[S26 Service work · Client Request] -->|Submit| L1
+  L1 -->|Accept in app or email| L2[Level 2 task · different person]
+  L1 -->|Reject with reason| REJ[Rejected → vendor resubmits new version]
+  L2 -->|Accept| SAP[Awaiting SAP GR / SES]
+  L2 -->|Reject with reason| REJ
+  SAP -->|SAP confirms| INV[Ready for invoice]
+  INV -->|vendor| S16[S16 Create invoice]
+  INV -->|Concerned Person| A11[A11 Upload on behalf · attributed]
+  S16 --> FIN[A12 Finance · ATL · WHT · PDF]
+  A11 --> FIN
+```
+
+## 11. Flat edge list (for diagram tools)
 
 | From | Trigger | To |
 |---|---|---|

@@ -17,6 +17,7 @@ shell    = old[:old.index('  <script type="__bundler/manifest">')]
 uuid_of = {e['id']: e['uuid'] for e in ext}
 SUPPORT_UUID = '63b45496-425b-4fd5-89a2-5cc8ca5cea5b'
 STATUS_ID = './StatusTag.dc.html'
+STORE_UUID = '9d2c7e41-3b6f-4a8e-9c01-5f7a2d4b8e63'   # parco-store.js (shared PARCO data layer)
 
 # font block from the old template: everything inside <helmet> up to the page's own <style>
 m = re.search(r'<helmet>\s*(.*?)\n<style>\nbody', old_tpl, re.S)
@@ -28,6 +29,7 @@ def pack(data: bytes, mime: str):
 
 # refresh the StatusTag component from the current source
 manifest[uuid_of[STATUS_ID]] = pack(open(os.path.join(repo,'StatusTag.dc.html'),'rb').read(), 'text/html')
+manifest[STORE_UUID] = pack(open(os.path.join(repo,'parco-store.js'),'rb').read(), 'text/javascript')
 
 SP_ID = './Supplier%20Portal.dc.html'   # COMPONENT_DIR + '/' + encodeURIComponent('Supplier Portal') + '.dc.html'
 SP_UUID = '7c1f3a52-9b0e-4d6a-8f21-3e5b7d9c0a14'
@@ -56,6 +58,8 @@ def build(src, out_name, title, ext_list, man):
     s = open(os.path.join(repo, src), encoding='utf-8').read()
     n = s.count('<script src="./support.js"></script>'); assert n == 1, (src, n)
     s = s.replace('<script src="./support.js"></script>', f'<script src="{SUPPORT_UUID}"></script>')
+    assert s.count('<script src="./parco-store.js"></script>') == 1, (src, 'parco-store tag')
+    s = s.replace('<script src="./parco-store.js"></script>', f'<script src="{STORE_UUID}"></script>')
     s = s.replace('<meta name="viewport" content="width=device-width, initial-scale=1">',
                   f'<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{html.escape(title)}</title>', 1)
     # fonts: drop Google Fonts links, inline the @font-face block pointing at bundled woff2 assets
