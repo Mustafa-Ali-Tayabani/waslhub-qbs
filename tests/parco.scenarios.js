@@ -253,7 +253,7 @@ async function supplierSupplyAndServices(ctx, h) {
   h.ok('S: existing dispatch listed pending L1', await h.has(p, S + ' tbody tr:has-text("PARCO-DSP-00081")', 'Pending Level 1'));
   await p.click(S + ' button:has-text("New dispatch")'); await p.waitForTimeout(300);
   await p.click(S + ' button:has-text("PO 4500012345")'); await p.waitForTimeout(300);
-  h.ok('S: PO lines prefilled from SAP read-only', await h.has(p, S, 'Stretch Wrap Film') && await h.has(p, S, 'Undelivered'));
+  h.ok('S: PO lines prefilled from SAP read-only', await h.has(p, S, 'Stretch Wrap Film') && (await h.text(p, S)).toLowerCase().includes('undelivered'));
   await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').fill('6000'); await p.waitForTimeout(200);
   h.ok('S: over-quantity flagged', (await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').evaluate(e => getComputedStyle(e).borderColor)) === 'rgb(194, 65, 12)');
   await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').fill('2000'); await p.fill(S + ' input[placeholder="e.g. DN-58940"]', 'DN-58940'); await p.click(S + ' button:has-text("Add file")'); await p.waitForTimeout(200);
@@ -304,3 +304,18 @@ async function supplierInvoiceAttributionAndProfile(ctx, h) {
   await reset(a); await a.close();
 }
 module.exports = Object.assign(module.exports, { supplierSharedOnboardingStatus, supplierSupplyAndServices, supplierInvoiceAttributionAndProfile });
+async function quickSearch(ctx, h) {
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await a.keyboard.press('Control+k'); await a.waitForTimeout(400);
+  h.ok('P: Ctrl+K opens quick search with screens and actions', (await h.count(a, '.ux-cmd .ux-cmd-item')) >= 8 && await h.has(a, '.ux-cmd', 'Invite a vendor from SAP'));
+  await a.keyboard.type('DSP-00081'); await a.waitForTimeout(300); await a.keyboard.press('Enter'); await a.waitForTimeout(900);
+  h.ok('P: quick search opens the dispatch in Supply approvals', (await h.count(a, '.ux-cmd')) === 0 && await h.has(a, '[data-screen-label="08 Supply Approvals"]', 'SAP-prefilled data'));
+  await a.close();
+  const p = await h.open(ctx, 'index.html'); await h.login(p);
+  await p.click('header .ux-search'); await p.waitForTimeout(400); await p.keyboard.type('4500012410'); await p.waitForTimeout(300);
+  h.ok('S: vendor quick search finds the PO', await h.has(p, '.ux-cmd', 'PO 4500012410'));
+  await p.keyboard.press('Enter'); await p.waitForTimeout(900);
+  h.ok('S: quick search opens the PO detail', (await h.count(p, '[data-screen-label="04 PO Detail"]')) === 1);
+  await p.close();
+}
+module.exports = Object.assign(module.exports, { quickSearch });

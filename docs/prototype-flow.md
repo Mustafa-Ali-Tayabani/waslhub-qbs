@@ -287,7 +287,7 @@ Admin navigation (after sign-in): six sidebar sections, each with tabs under the
 | SAP sync | Synced · Sync failed (header pill, banner, table error state) | Synced · Sync failed (pill, banner, connection card, sync-log row) |
 | Invoice NIS-INV-2025-0871 | Blocked · Scheduled · Paid | — |
 
-Prototype-only helpers (reset-link opener, expired-link opener, payment-run simulator) are hidden when the dock is switched off via the `showPrototypeDock` property. Changing who you are is not a dock control any more: both portals have a sign-in screen with demo accounts, and *Switch account* in the header menu returns to it.
+Prototype-only helpers (reset-link opener, expired-link opener, payment-run simulator) are hidden when the dock is switched off via the `showPrototypeDock` property. Quick search (⌘K / Ctrl+K, or the search field in the header) jumps to any screen, action or record the signed-in user may open. Changing who you are is not a dock control any more: both portals have a sign-in screen with demo accounts, and *Switch account* in the header menu returns to it.
 
 Recommended demo path: Log in → Dashboard → PO 4500012345 → Create Invoice (change a unit price) → Submitted → View invoice (Blocked, Price Variance) → Upload corrected invoice → Resubmit (Scheduled) → Simulate payment run (Paid) → Remittance advice. Admin path: Supplier management → Invite supplier → three steps.
 
