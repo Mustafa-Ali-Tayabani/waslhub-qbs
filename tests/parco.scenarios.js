@@ -153,7 +153,7 @@ async function sodAndServices(ctx, h) {
   await actAs(p, 'Hassan Malik'); await goTo(p, 'Approvals', 'Services');
   const S = '[data-screen-label="08 Service Approvals"]';
   await p.click(S + ' tbody tr:has-text("PARCO-SRV-000112")'); await p.waitForTimeout(500);
-  h.ok('P: SoD — Hassan already decided L1, cannot act on L2', (await h.count(p, S + ' button:has-text("Accept")')) === 0 && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide') && await h.has(p, S, 'Client Request Number'));
+  h.ok('P: SoD — Hassan already decided L1, cannot act on L2', (await h.count(p, S + ' button:not(.dis):has-text("Accept")')) === 0 && (await h.count(p, S + ' .ux-dr-foot button.dis:has-text("Accept")')) === 1 && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide') && await h.has(p, S, 'Client Request Number'));
   await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Services');
   h.ok('P: client requests table lists 3 CRs', (await p.locator(S + ' table').nth(1).locator('tbody tr').count()) === 3);
   await p.click(S + ' button:has-text("Issue client request")'); await p.waitForTimeout(300);
@@ -367,3 +367,25 @@ async function tableSearchAndFilters(ctx, h) {
   await p.close();
 }
 module.exports = Object.assign(module.exports, { tableSearchAndFilters });
+async function taxRulesAndLockedApproval(ctx, h) {
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await goTo(a, 'Approvals', 'Supply'); const S = '[data-screen-label="08 Supply Approvals"]';
+  await a.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await a.waitForTimeout(600);
+  h.ok('P: non-assigned user sees locked Accept/Reject and a demo switch', (await h.count(a, S + ' .ux-dr-foot button.dis')) === 2 && await h.has(a, S + ' .ux-dr-foot', 'Switch to Hassan'));
+  await a.click(S + ' .ux-dr-foot button:has-text("Switch to Hassan")'); await a.waitForTimeout(600);
+  h.ok('P: after switching, the assigned approver can decide', (await h.count(a, S + ' .ux-dr-foot button:not(.dis):has-text("Accept")')) === 1 && await h.has(a, 'header', 'Hassan Malik'));
+  await actAs(a, 'Bilal Raza'); await goTo(a, 'Vendors', 'Directory'); const V = '[data-screen-label="08 Vendors"]';
+  await a.click(V + ' tbody tr:has-text("V-1000236")'); await a.waitForTimeout(600);
+  h.ok('P: vendor shows its tax code rule', await h.has(a, V + ' .ux-taxr', '2 of 4 tax codes') && await h.has(a, V + ' .ux-taxr', 'default V5'));
+  await a.click(V + ' .ux-taxr button:has-text("Edit rule")'); await a.click(V + ' .ux-taxopt:has-text("V0")'); await a.fill(V + ' .ux-taxr input', 'Only VAT 5% invoices'); await a.click(V + ' .ux-taxr button:has-text("Save rule")'); await a.waitForTimeout(400);
+  h.ok('P: finance saves a narrower tax rule', JSON.stringify(await a.evaluate(() => PARCO.vendor('V-1000236').taxRule.codes)) === '["V5"]');
+  await a.close();
+  const p = await h.open(ctx, 'index.html'); await h.login(p);
+  await p.locator('.ux-row:has-text("Invoice PO 4500012345") button:has-text("Create invoice")').click(); await p.waitForTimeout(800);
+  const C = '[data-screen-label="05 Create Invoice"]';
+  await p.locator(C + ' :text("check_box_outline_blank")').first().click(); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400);
+  const opts = await p.evaluate(() => [...document.querySelectorAll('select')].map(x => [...x.options].map(o => o.text)).filter(a => a.some(t => /V5|V0|VE/.test(t)))[0] || []);
+  h.ok('S: vendor invoice offers only the assigned tax code, preselected', opts.length === 2 && opts[1].startsWith('V5') && await h.has(p, C, 'PARCO Finance assigned'), JSON.stringify(opts));
+  await reset(p); await p.close();
+}
+module.exports = Object.assign(module.exports, { taxRulesAndLockedApproval });
