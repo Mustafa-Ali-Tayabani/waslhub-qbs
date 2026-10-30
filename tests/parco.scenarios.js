@@ -31,7 +31,7 @@ async function adminOnboardingDetail(ctx, h) {
   await p.click(S + ' tbody tr:has-text("ONB-00041")'); await p.waitForTimeout(600);
   h.ok('P: ONB-00041 detail shows both channels pending', (await h.count(p, S + ' span:has-text("Pending")')) >= 2 && await h.has(p, S, 'Coastal Civil Works'));
   h.ok('P: SAP-prefilled form shows Missing in SAP', await h.has(p, S, 'Missing in SAP'));
-  h.ok('P: channel vendor-view links present', (await h.count(p, S + ' a:has-text("Open vendor view")')) === 2);
+  h.ok('P: channel vendor-view links present', (await h.count(p, S + ' .ob-ch a:has-text("Vendor view")')) === 2 && (await h.count(p, S + ' .ob-track .ob-st')) === 4);
   await p.screenshot({ path: h.SHOTS + '/p-onboarding-detail.png' });
   await p.click(S + ' tbody tr:has-text("ONB-00040")'); await p.waitForTimeout(500);
   h.ok('P: accepted request shows lock banner + review actions', await h.has(p, S, 'already accepted via Magic link') && (await h.count(p, S + ' .ux-dr-foot button:has-text("Activate vendor")')) === 1 && await h.has(p, S + ' .ux-dr-foot', 'Your review'));
