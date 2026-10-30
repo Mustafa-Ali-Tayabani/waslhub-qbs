@@ -226,6 +226,15 @@ kbd{font:inherit;font-size:11px;font-weight:700;color:#5E6B80;background:#FFFFFF
 .ux-side{padding-bottom:66px!important}
 main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
 @media (max-width:900px){.ux-drawer{width:100vw}}
+.ux-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ux-acct-grp{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7C8799;display:flex;align-items:center;gap:6px}
+.ux-acct{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 5px;border:1px solid #E6EAF2;border-radius:999px;background:#FFFFFF;cursor:pointer;font:inherit;color:#0E1726;text-align:start}
+.ux-acct:hover,.ux-acct:focus-visible{border-color:var(--brand,#2348D6);background:var(--brand-tint,#E7EEF8);outline:none}
+.ux-acct .m{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:#0E1726;color:#FFFFFF;flex:none}
+.ux-acct.staff .m{background:var(--brand-grad,var(--brand,#2348D6))}
+.ux-acct .tx{display:flex;flex-direction:column;line-height:1.15}
+.ux-acct .tx b{font-size:13px}
+.ux-acct .tx span{font-size:11px;color:#5E6B80;font-weight:600}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" dir="{{ dir }}" style="font-family:'Figtree',system-ui,sans-serif;color:#0E1726;background:#F4F6FA;min-height:100vh;font-size:14px;line-height:1.45;display:flex">
@@ -250,6 +259,7 @@ main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
             </button>
           </sc-for>
         </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid #EEF2F7"><span class="ux-acct-grp"><span class="ms" style="font-size:15px">storefront</span>Vendor users · open the Supplier Portal</span><div class="ux-chips"><sc-for list="{{ lg.vendors }}" as="a" hint-placeholder-count="3"><button class="{{ a.cls }}" onClick="{{ a.go }}" data-tip="{{ a.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}"><span class="m">{{ a.mono }}</span><span class="tx"><b>{{ a.name }}</b><span>{{ a.role }}</span></span></button></sc-for></div></div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #EEF2F7;font-size:13px;color:#5E6B80"><span>Production sign-in uses PARCO single sign-on (simulated in this prototype).</span><a href="Supplier Portal.dc.html" style="font-weight:700;color:var(--brand-text,#0B4F9C);display:inline-flex;align-items:center;gap:4px">Vendor user? Open the Supplier Portal<span style="font-family:'Material Symbols Outlined';font-size:18px">{{ fwd }}</span></a></div>
       </div>
     </div>
@@ -1069,7 +1079,7 @@ class Component extends DCLogic {
     const navItems=secs.map(x=>{const a=x===cur;const b=x.screens.reduce((n,k)=>n+bOf(k),0);return{cls:'ux-nav'+(a?' on':''),label:x.l,icon:x.i,go:e=>{e&&e.preventDefault();this.setState({screen:x.screens[0],tip:null,userOpen:false});},bg:a?'#25303F':'transparent',fg:a?'#FFFFFF':'#C9CFD8',hasBadge:b>0,badge:String(b)};});
     const secTabs={show:cur.screens.length>1,items:cur.screens.map(k=>{const a=k===sAlias;const b=bOf(k);return{label:TAB[k]||k,go:e=>{e&&e.preventDefault();this.setState({screen:k,tip:null,userOpen:false});},fg:a?'var(--brand-text,#0B4F9C)':'#5E6B80',bd:a?'var(--brand,#0B4F9C)':'transparent',fw:a?'700':'600',hasBadge:b>0,badge:String(b)};})};
     const BLURB={PARCO_ADMIN:'Invites vendors from SAP, sets Supply / Services capability, activates vendors and assigns Concerned Persons.',PARCO_FINANCE:'Reviews vendor invoices, records ATL and WHT, sees payment insight.',PARCO_APPROVER_1:'First of two approvers for supply dispatches and service work.',PARCO_APPROVER_2:'Second approver; never the same person as Level 1.',CONCERNED_PERSON:'Vendor relationship officer; uploads invoices on behalf of assigned vendors with full logging.'};
-    const lg={accounts:d.staff.map(x=>({id:x.id,name:x.name.replace(' (Demo)',''),role:x.roleLabel,email:x.email,mono:x.mono,blurb:BLURB[x.role]||'',go:e=>{e&&e.preventDefault();this.signIn(x.id);}})),pendingNote:S.pending?'You followed a link to '+(NALL.find(n=>n[0]===S.pending.screen)||['','this page'])[1]+'. Sign in to continue there.':'',hasPending:!!S.pending};
+    const lg={vendors:PARCO.accounts().vendor.map(a=>({cls:'ux-acct',name:a.name.replace(' (Demo)',''),role:a.role,tip:a.email+' · '+a.role+' · opens the Supplier Portal',mono:a.mono,go:e=>{e&&e.preventDefault&&e.preventDefault();PARCO.setSession({vendorUser:a.email});location.href=/\.dc\.html$/.test(location.pathname)?'Supplier%20Portal.dc.html':'index.html';}})),accounts:d.staff.map(x=>({id:x.id,name:x.name.replace(' (Demo)',''),role:x.roleLabel,email:x.email,mono:x.mono,blurb:BLURB[x.role]||'',go:e=>{e&&e.preventDefault();this.signIn(x.id);}})),pendingNote:S.pending?'You followed a link to '+(NALL.find(n=>n[0]===S.pending.screen)||['','this page'])[1]+'. Sign in to continue there.':'',hasPending:!!S.pending};
     const r1=cr(t.brand,t.on);
     const F=[['sa','Standalone (non-PO) invoices','Suppliers can submit invoices without a PO.'],['cm','Credit memos','Suppliers can submit credit memos against a PO or invoice.'],['park','“Parked in SAP” step','Invoices are parked before posting. Turn off if you post directly.'],['sub','Supplier-managed sub-users','Supplier admins can invite their own colleagues.']];
     const sup=SUP.map(r=>{const st=S.sup&&S.sup[r[0]]||r[4];const M={on:['Enabled','#0B6B63','#DFF3EF','check_circle','Deactivate','Portal access is enabled. Users can log in and submit invoices.'],off:['Deactivated','#4A5361','#EEF2F7','block','Activate','Access is deactivated. Users cannot log in; documents stay in SAP.'],invited:['Invitation sent','#8A5300','#FDF1DC','schedule_send','Resend invite','Invitation sent. The activation link is valid for 72 hours and works once.'],none:['No access','#4A5361','#FFFFFF','remove','Invite','This SAP supplier has no portal access yet. Invite them to get started.']}[st];
