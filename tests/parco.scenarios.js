@@ -51,7 +51,9 @@ async function adminInviteWizard(ctx, h) {
   h.ok('P: wizard search finds SAP vendor', (await h.count(p, W + ' button:has-text("V-1000238")')) === 1 && (await h.count(p, W + ' button:has-text("V-1000236")')) === 0);
   await p.click(W + ' button:has-text("V-1000238")'); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(300);
   await p.click(W + ' button:has-text("Services —")'); await p.waitForTimeout(200);
-  await p.click(W + ' button:has-text("Instrument Calibration")'); await p.click(W + ' button:has-text("Equipment Inspection")'); await p.waitForTimeout(200);
+  await p.fill(W + ' .ux-svp input', 'calibration'); await p.waitForTimeout(250);
+  h.ok('P: service search narrows a 100+ service master', (await h.count(p, W + ' .ux-svrow')) < 10 && await h.has(p, W, 'Showing') && await h.has(p, W, 'of 105'));
+  await p.click(W + ' .ux-svrow:has-text("SVC-CAL-04")'); await p.click(W + ' .ux-svp .clr'); await p.waitForTimeout(200); await p.click(W + ' .ux-cat:has-text("Inspection")'); await p.waitForTimeout(200); await p.click(W + ' .ux-svrow:has-text("SVC-INSP-03")'); await p.waitForTimeout(200);
   h.ok('P: multi-select services', await h.has(p, W, '2 selected'));
   await p.screenshot({ path: h.SHOTS + '/p-wizard-step2.png' });
   await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(300);
@@ -93,7 +95,7 @@ async function emailActionApproval(ctx, h) {
 async function adminVendorsAuditNotifications(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p); await goTo(p, 'Vendors', 'Directory');
   const V = '[data-screen-label="08 Vendors"]';
-  h.ok('P: vendors table 6 SAP vendors', (await h.count(p, V + ' tbody tr')) === 6);
+  h.ok('P: vendors table lists the SAP vendors', (await h.count(p, V + ' tbody tr')) === 11 && await h.has(p, V, 'Showing 1–11 of 11'));
   await p.click(V + ' tbody tr:has-text("V-1000236")'); await p.waitForTimeout(600);
   h.ok('P: vendor detail with ATL and concerned person', await h.has(p, V, 'Indus Technical') && await h.has(p, V, 'ATL — Active Taxpayer List') && await h.has(p, V, 'Farhan Siddiqui') && !(await h.has(p, 'body', 'ATS')));
   await p.screenshot({ path: h.SHOTS + '/p-vendor-detail.png' });
@@ -161,11 +163,11 @@ async function sodAndServices(ctx, h) {
   h.ok('P: client request issued by PARCO', (await p.locator(S + ' table').nth(1).locator('tbody tr').count()) === 4 && await h.has(p, S, 'PARCO (issued in portal)'));
   await goTo(p, 'Setup', 'Services master data');
   const M = '[data-screen-label="08 Services Master Data"]';
-  h.ok('P: services master 5 SAP services', (await h.count(p, M + ' tbody tr')) === 5);
+  const nSvc = await h.count(p, M + ' tbody tr'); h.ok('P: services master lists the SAP service master (100+)', nSvc >= 100);
   await p.click(M + ' tbody tr:has-text("SVC-MECH-01")'); await p.waitForTimeout(400);
   h.ok('P: SAP-owned service read-only with 2 eligible vendors', await h.has(p, M, 'SAP-owned master record') && (await h.count(p, M + ' a:has-text("V-1000")')) === 2);
   await p.click(M + ' button:has-text("Add PARCO draft service")'); await p.fill(M + ' label:has-text("Service name") input', 'Scaffolding Services (Demo)'); await p.click(M + ' button:has-text("Save draft")'); await p.waitForTimeout(500);
-  h.ok('P: PARCO draft service labelled and listed', (await h.count(p, M + ' tbody tr')) === 6 && await h.has(p, M, 'PARCO draft'));
+  h.ok('P: PARCO draft service labelled and listed', (await h.count(p, M + ' tbody tr')) === nSvc + 1 && await h.has(p, M, 'PARCO draft'));
   await p.screenshot({ path: h.SHOTS + '/p-services-master.png' });
   await p.close();
 }

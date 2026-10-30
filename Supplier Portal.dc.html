@@ -220,11 +220,56 @@ kbd{font:inherit;font-size:11px;font-weight:700;color:#5E6B80;background:#FFFFFF
 .ux-dr-close{width:36px;height:36px;border:1px solid #E6EAF2;border-radius:10px;background:#FFFFFF;cursor:pointer;display:grid;place-items:center;font-size:20px;color:#334155}
 .ux-drawer.form .ux-dr-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:20px 0}
 .ux-drawer.form .ux-dr-body > div:first-child{display:contents!important}
-.ux-side{padding-bottom:66px!important}
 main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
 @media (max-width:900px){.ux-drawer{width:100vw}}
 .ux-chips{display:flex;flex-wrap:wrap;gap:8px}
 .ux-dd{position:relative}
+.ux-mail{min-height:100vh;background:#F6F8FC;color:#1F1F1F;display:flex;flex-direction:column}
+.ux-mail .ms{font-size:20px;color:#444746}
+.ux-mail-top{height:64px;display:flex;align-items:center;gap:6px;padding:0 16px 0 12px}
+.ux-mail-top .ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.ux-mail-top .ic:hover{background:rgba(68,71,70,.08)}
+.ux-mail-top .brand{display:flex;align-items:center;gap:8px;width:190px;font-size:21px;color:#444746;padding-inline-start:4px}
+.ux-mail-top .brand .ms{font-size:28px;color:var(--brand,#2348D6)}
+.ux-mail-top .search{flex:1;max-width:720px;height:48px;border-radius:24px;background:#EAF1FB;display:flex;align-items:center;gap:12px;padding:0 16px;color:#444746;font-size:15px}
+.ux-mail-top .search .tx{flex:1}
+.ux-mail-top .demo{margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#5E6B80;padding:4px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #E6EAF2}
+.ux-mail-top .demo .ms{font-size:15px}
+.ux-mail-top .me{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#0B6B63;color:#FFFFFF!important;font-size:20px;margin-inline-start:6px}
+.ux-mail-wrap{flex:1;display:flex;min-height:0}
+.ux-mail-nav{width:256px;flex:none;padding:8px 0;display:flex;flex-direction:column}
+.ux-mail-nav .compose{align-self:flex-start;margin:0 0 16px 8px;height:56px;padding:0 24px 0 18px;border:0;border-radius:16px;background:#C2E7FF;font:inherit;font-size:14px;font-weight:600;color:#001D35;display:inline-flex;align-items:center;gap:12px;cursor:pointer;box-shadow:none}
+.ux-mail-nav .compose:hover{box-shadow:0 1px 3px rgba(60,64,67,.3)}
+.ux-mail-nav .compose .ms{color:#001D35;font-size:22px}
+.ux-mail-nav a{height:32px;display:flex;align-items:center;gap:16px;padding:0 12px 0 26px;margin-inline-end:16px;border-radius:0 16px 16px 0;font-size:14px;color:#1F1F1F;text-decoration:none;cursor:pointer}
+.ux-mail-nav a:hover{background:#E9EEF6}
+.ux-mail-nav a.on{background:#D3E3FD;font-weight:700;color:#001D35}
+.ux-mail-nav a .l{flex:1}
+.ux-mail-nav a b{font-size:12px}
+.ux-mail-nav .lbl{display:flex;align-items:center;justify-content:space-between;padding:16px 28px 6px 26px;font-size:15px;font-weight:600;color:#1F1F1F}
+.ux-mail-main{flex:1;min-width:0;margin:0 16px 16px 0;background:#FFFFFF;border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.ux-mail-main .tools{height:48px;display:flex;align-items:center;gap:20px;padding:0 18px;border-bottom:1px solid #EEF2F7}
+.ux-mail-main .tools i{width:1px;height:20px;background:#E6EAF2}
+.ux-mail-main .tools .sp,.ux-mail .msg .sp{flex:1}
+.ux-mail-main .tools .cnt{font-size:12px;color:#5E6B80}
+.ux-mail-main .tools .dim{color:#B0B6BE}
+.ux-mail .msg{padding:20px 24px 28px 72px;overflow:auto}
+.ux-mail .subj{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.ux-mail .subj h1{margin:0;font-size:22px;font-weight:500;color:#1F1F1F;letter-spacing:0}
+.ux-mail .subj .tag{display:inline-flex;align-items:center;gap:2px;height:20px;padding:0 4px 0 6px;border-radius:4px;background:#DDDDDD;font-size:12px;color:#444746}
+.ux-mail .subj .tag .ms{font-size:13px}
+.ux-mail .from{position:relative;display:flex;align-items:center;gap:12px;margin:0 0 18px -56px}
+.ux-mail .from .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--brand,#2348D6);color:#FFFFFF;font-weight:700;font-size:13px}
+.ux-mail .from .who{display:flex;flex-direction:column;gap:1px;font-size:14px}
+.ux-mail .from .who span{font-size:12px;color:#5E6B80}
+.ux-mail .from .to{display:flex;align-items:center;font-size:12px;color:#5E6B80}
+.ux-mail .from .to .ms{font-size:18px}
+.ux-mail .from .when{font-size:12px;color:#5E6B80}
+.ux-mail .content > div{max-width:760px!important}
+.ux-mail .replies{display:flex;gap:10px;margin-top:22px}
+.ux-mail .replies button{height:40px;padding:0 20px 0 14px;border:1px solid #747775;border-radius:20px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:600;color:#444746;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.ux-mail .replies button:hover{background:#F2F2F2}
+@media (max-width:1000px){.ux-mail-nav{display:none}.ux-mail .msg{padding-inline-start:24px}.ux-mail .from{margin-inline-start:0}}
 .ux-dd-btn{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 20px;gap:12px;align-items:center;padding:10px 14px;border:1px solid #D9DFE9;border-radius:12px;background:#FFFFFF;font:inherit;color:#0E1726;text-align:start;cursor:pointer}
 .ux-dd-btn:hover{border-color:var(--brand,#2348D6)}
 .ux-dd-btn .lead{font-size:24px;color:var(--brand-text,#2348D6)}
@@ -346,10 +391,10 @@ main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
           <div class="ux-dd">
             <button class="ux-dd-btn" onClick="{{ lg.ddToggle }}" aria-haspopup="listbox" aria-expanded="{{ lg.ddOpen }}"><span class="ms lead">account_circle</span><span class="tx"><b>Sign in with a demo account</b><span>Choose a vendor user or a PARCO staff member</span></span><span class="ms">{{ lg.ddIcon }}</span></button>
             <sc-if value="{{ lg.ddOpen }}" hint-placeholder-val="{{ false }}"><div class="ux-dd-bg" onClick="{{ lg.ddClose }}"></div><div class="ux-dd-menu" role="listbox" aria-label="Demo accounts">
-              <div class="grp"><span class="ms">storefront</span>Vendor · {{ lg.vendorName }}</div>
-              <sc-for list="{{ lg.demo }}" as="a" hint-placeholder-count="3"><button class="ux-dd-opt" role="option" onClick="{{ a.go }}"><span class="{{ a.mcls }}">{{ a.mono }}</span><span class="tx"><b>{{ a.name }}</b><span>{{ a.role }}</span></span><span class="ms arr">login</span></button></sc-for>
               <div class="grp"><span class="ms">badge</span>PARCO staff · opens the Tenant Admin</div>
               <sc-for list="{{ lg.staff }}" as="a" hint-placeholder-count="5"><button class="ux-dd-opt" role="option" onClick="{{ a.go }}"><span class="{{ a.mcls }}">{{ a.mono }}</span><span class="tx"><b>{{ a.name }}</b><span>{{ a.role }}</span></span><span class="ms arr">login</span></button></sc-for>
+              <div class="grp"><span class="ms">storefront</span>Vendor · {{ lg.vendorName }}</div>
+              <sc-for list="{{ lg.demo }}" as="a" hint-placeholder-count="3"><button class="ux-dd-opt" role="option" onClick="{{ a.go }}"><span class="{{ a.mcls }}">{{ a.mono }}</span><span class="tx"><b>{{ a.name }}</b><span>{{ a.role }}</span></span><span class="ms arr">login</span></button></sc-for>
             </div></sc-if>
           </div>
           <p style="margin:0;text-align:center;font-size:13px;color:#5E6B80">New supplier? <a href="#" onClick="{{ nav.activate }}" style="font-weight:700;color:var(--brand-text,#0B4F9C)">Activate your account</a> from the invitation email.</p>
@@ -456,8 +501,16 @@ main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
 </div>
 </sc-if>
 <sc-if value="{{ is.onbEmail }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="01 Onboarding · Email Action" style="min-height:100vh;background:#E9ECF0;padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px">
-  <div style="width:100%;max-width:760px;font-size:12px;color:#5E6B80;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span>Inbox · vendor’s email client (demo preview — email delivery is simulated)</span><span>no-reply@parco-portal.example · to {{ onb.email }} · {{ onb.sentAt }}</span></div>
+<div data-screen-label="01 Onboarding · Email Action" class="ux-mail">
+  <div class="ux-mail-top"><span class="ic ms">menu</span><span class="brand"><span class="ms">mail</span>Mail</span><div class="search"><span class="ms">search</span><span class="tx">Search mail</span><span class="ms">tune</span></div><span class="demo"><span class="ms">science</span>Demo mail client · delivery simulated</span><span class="ic ms">help</span><span class="ic ms">settings</span><span class="ic ms">apps</span><span class="me ms">person</span></div>
+  <div class="ux-mail-wrap">
+    <nav class="ux-mail-nav"><button class="compose" onClick="{{ mailNote }}"><span class="ms">edit</span>Compose</button><a class="on"><span class="ms">inbox</span><span class="l">Inbox</span><b>1</b></a><a><span class="ms">star</span><span class="l">Starred</span></a><a><span class="ms">schedule</span><span class="l">Snoozed</span></a><a><span class="ms">label_important</span><span class="l">Important</span></a><a><span class="ms">send</span><span class="l">Sent</span></a><a><span class="ms">draft</span><span class="l">Drafts</span></a><a><span class="ms">expand_more</span><span class="l">More</span></a><div class="lbl">Labels<span class="ms">add</span></div><a><span class="ms" style="color:var(--brand,#2348D6)">label</span><span class="l">PARCO</span></a><a><span class="ms" style="color:#0B6B63">label</span><span class="l">Finance</span></a></nav>
+    <div class="ux-mail-main">
+      <div class="tools"><span class="ms">arrow_back</span><span class="ms">archive</span><span class="ms">report</span><span class="ms">delete</span><i></i><span class="ms">mark_email_unread</span><span class="ms">schedule</span><span class="ms">add_task</span><span class="ms">drive_file_move</span><span class="ms">label</span><span class="ms">more_vert</span><span class="sp"></span><span class="cnt">1 of 1</span><span class="ms dim">chevron_left</span><span class="ms dim">chevron_right</span></div>
+      <div class="msg">
+        <div class="subj"><h1>Action required: vendor onboarding · {{ onb.vendor }}</h1><span class="tag">Inbox<span class="ms">close</span></span><span class="sp"></span><span class="ms">print</span><span class="ms">open_in_new</span></div>
+        <div class="from"><span class="av">{{ onb.mono }}</span><div class="who"><div><b>{{ onb.tenant }}</b> <span>&lt;no-reply@parco-portal.example&gt;</span></div><div class="to">to&nbsp;{{ onb.email }}<span class="ms">arrow_drop_down</span></div></div><span class="sp"></span><span class="when">{{ onb.sentAt }}</span><span class="ms">star_outline</span><span class="ms">reply</span><span class="ms">more_vert</span></div>
+        <div class="content">
   <div style="width:100%;max-width:760px;background:#FFFFFF;border:1px solid #E6EAF2;border-radius:16px;overflow:hidden;box-shadow:var(--sh-card)">
     <div style="background:var(--brand,#0B4F9C);color:var(--on-brand,#FFFFFF);padding:16px 22px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:10px;background:#FFFFFF;color:#0E1726;display:grid;place-items:center;font-weight:800;font-size:12px">{{ onb.mono }}</span><b>{{ onb.tenant }} · Vendor onboarding · action required</b></div>
     <sc-if value="{{ onb.missing }}" hint-placeholder-val="{{ false }}"><div style="padding:32px;text-align:center;color:#5E6B80">This email action link is invalid or has expired ({{ onb.id }}).</div></sc-if>
@@ -473,6 +526,11 @@ main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
       <div style="font-size:11px;color:#7C8799">{{ onb.token }} · This page is a verified decision page opened from the email, not a raw reply. A mail scanner opening the link does not decide anything.</div>
     </div>
     <div style="padding:14px 22px;background:#F4F6FA;font-size:11px;color:#5E6B80;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span>Powered by</span><span class="wh-logo xs" role="img" aria-label="WaslHub">Waslhub<i>.ai</i></span><span>· Designed &amp; Developed by</span><span class="qbs-logo sm" role="img" aria-label="QBSCO"></span></div>
+  </div>
+        </div>
+        <div class="replies"><button onClick="{{ mailNote }}"><span class="ms">reply</span>Reply</button><button onClick="{{ mailNote }}"><span class="ms">forward</span>Forward</button></div>
+      </div>
+    </div>
   </div>
 </div>
 </sc-if>
@@ -1832,7 +1890,7 @@ class Component extends DCLogic {
       masked:(PARCO.session().vendorUser||'lena.marsh@example.com').replace(/^(.)[^@]*/,'$1•••••'),vendorName:(PARCO.vendor(VENDOR)||{name:''}).name.replace(' (Demo)',''),
       ddOpen:!!S.demoOpen,ddIcon:S.demoOpen?'expand_less':'expand_more',ddToggle:()=>this.setState(z=>({demoOpen:!z.demoOpen})),ddClose:()=>this.setState({demoOpen:false}),demo:PARCO.accounts().vendor.map(a=>({cls:'ux-acct sm',mcls:'m',name:a.name.replace(' (Demo)',''),role:a.role+' · '+a.email,email:a.email,tip:a.email+' · '+a.role,mono:a.mono,go:e=>{e&&e.preventDefault&&e.preventDefault();this.setState({demoOpen:false});this.signIn(a.email);}})),staff:PARCO.accounts().parco.map(x=>({cls:'ux-acct sm staff',mcls:'m staff',name:x.name.replace(' (Demo)',''),role:x.role.replace(' / Vendor Relationship Officer','')+' · '+x.email,tip:x.email+' · '+x.role+' · opens the Tenant Admin',mono:x.mono,go:e=>{e&&e.preventDefault&&e.preventDefault();PARCO.setSession({parco:x.id});location.href=/\.dc\.html$/.test(location.pathname)?'Tenant%20Admin.dc.html':'admin.html';}}))};
     const me=A?{name:A.name.replace(' (Demo)',''),role:A.role,email:A.email,mono:A.mono,vendor:A.vendorName.replace(' (Demo)',''),tip:'Signed in as '+A.name.replace(' (Demo)','')+' · '+A.role+' · '+A.vendorName+' ('+VENDOR+'). Open the menu for profile, switching account or logging out.'}:{name:'',role:'',email:'',mono:'',vendor:'',tip:''};me.open=!!S.userOpen;me.toggle=()=>this.setState(z=>({userOpen:!z.userOpen,coOpen:false,newOpen:false,tip:null}));me.profile=e=>{e&&e.preventDefault&&e.preventDefault();this.go('profile');};me.switchAcct=()=>this.signOut();me.logout=()=>{this.signOut();this.toast('You have been logged out');};
-    return{rootRef:this.rootRef,lg,me,wfTabs,cmd:(is.app?this.cmdV():{open:false,toggle:()=>{}}),unread:String(unread),hasUnread:unread>0,slide:{h:slides[sl][0],p:slides[sl][1],a:sl===0,b:sl===1,c:sl===2,d1:this.fd(TODAY),d2:this.fd('2026-11-05'),
+    return{rootRef:this.rootRef,lg,me,wfTabs,mailNote:()=>this.toast('A reply is not a decision. Use Accept or Reject inside the email.'),cmd:(is.app?this.cmdV():{open:false,toggle:()=>{}}),unread:String(unread),hasUnread:unread>0,slide:{h:slides[sl][0],p:slides[sl][1],a:sl===0,b:sl===1,c:sl===2,d1:this.fd(TODAY),d2:this.fd('2026-11-05'),
         steps:[['Submitted','10:14','done'],['Parked in SAP','10:16','done'],['Under Review','11:02','done'],['Posted','15:40','cur']].filter(x=>this.parking()||x[0]!=='Parked in SAP').map((x,i,a)=>({l:x[0],t:this.fd(TODAY)+' · '+x[1],icon:x[2]==='done'?'check':'radio_button_checked',bg:x[2]==='done'?'var(--brand,#0B4F9C)':'#FFFFFF',bd:'var(--brand,#0B4F9C)',fg:x[2]==='done'?'var(--on-brand,#FFFFFF)':'var(--brand-text,#0B4F9C)',line:i===a.length-1?'transparent':'var(--brand-line,#9DB9DA)'}))},dots:slides.map((_,i)=>({go:()=>this.setState({slide:i}),w:i===sl?'32px':'8px',op:i===sl?'1':'.5',aria:'Slide '+(i+1)})),
       termsIcon:S.terms?'check_box':'check_box_outline_blank',toggleTerms:()=>this.setState(z=>({terms:!z.terms})),actBg:S.terms?'var(--brand,#0B4F9C)':'#E6EAF2',actFg:S.terms?'var(--on-brand,#FFFFFF)':'#7C8799',actCur:S.terms?'pointer':'not-allowed',activateGo:()=>S.terms?this.go('twofa'):this.toast('Accept the terms to continue'),
       copyKey:e=>{e&&e.preventDefault&&e.preventDefault();this.toast('Setup key copied');},finishOnboarding:()=>this.go('dashboard',{welcome:true}),welcome:S.welcome&&is.app,closeWelcome:()=>this.setState({welcome:false}),openDocs:()=>this.go('docs',{welcome:false}),
@@ -1847,7 +1905,7 @@ class Component extends DCLogic {
       dash:is.dashboard?this.dashV():{},wf:is.workflow?this.wfV():{},pov:is.po?this.poV():{},rcv:is.receipt?this.rcV():{},wzv:is.create?this.wzV():{},sav:is.standalone?this.saV():{},iv:is.invoice?this.ivV():{},pay:is.payments?this.payV():{},nt:is.notifications?this.ntV():{},
       pf:{changeOpen:S.changeOpen,toggleChange:()=>this.setState(z=>({changeOpen:!z.changeOpen,changeSent:false})),sent:S.changeSent,notSent:!S.changeSent,send:()=>this.setState({changeSent:true}),invite:()=>this.toast('Invitation sent to the new user')},
       sup:is.supply?this.withFoot(this.supV()):{},srv:is.services?this.withFoot(this.srvV()):{},onb:(is.onbPortal||is.onbEmail)?this.onbV():{},pdf:this.pdfV(),vp:is.profile?this.profV():{},cp:this.cpV(),
-      dock:{flows:flows.map(f=>({l:f[0],go:()=>this.go(f[1],Object.assign({welcome:false,terms:false},f[2]))})),show:this.props.showPrototypeDock!==false,open:S.dock,closed:!S.dock,toggle:()=>this.setState(z=>({dock:!z.dock})),opts:scrOpts,screen:s,setScreen:e=>{const v=e.target.value;this.go(v,v==='invoice'?{submitted:true,selInv:'main'}:(v==='create'?{wz:WZ0()}:(v==='onbPortal'||v==='onbEmail'?{onbId:'ONB-00041'}:{})));},reset:()=>{PARCO.reset();this.setState({subSel:null,dsp:null,srvF:null});this.toast('PARCO demo data reset to fixtures');},
+      dock:{flows:flows.map(f=>({l:f[0],go:()=>this.go(f[1],Object.assign({welcome:false,terms:false},f[2]))})),show:this.props.showPrototypeDock!==false&&/[?&]prototype=1/.test(location.search),open:S.dock,closed:!S.dock,toggle:()=>this.setState(z=>({dock:!z.dock})),opts:scrOpts,screen:s,setScreen:e=>{const v=e.target.value;this.go(v,v==='invoice'?{submitted:true,selInv:'main'}:(v==='create'?{wz:WZ0()}:(v==='onbPortal'||v==='onbEmail'?{onbId:'ONB-00041'}:{})));},reset:()=>{PARCO.reset();this.setState({subSel:null,dsp:null,srvF:null});this.toast('PARCO demo data reset to fixtures');},
         table:seg(S.table,[['data','Data'],['loading','Loading'],['empty','Empty'],['error','Error']],v=>this.setState({table:v})),sync:seg(S.syncFailed?'f':'o',[['o','Synced'],['f','Sync failed']],v=>this.setState({syncFailed:v==='f'})),inv:seg(S.invState,[['blocked','Blocked'],['scheduled','Scheduled'],['paid','Paid']],v=>this.setState({invState:v,submitted:true}))}};
   }
 }
