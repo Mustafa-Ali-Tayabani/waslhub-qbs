@@ -321,3 +321,49 @@ async function quickSearch(ctx, h) {
   await p.close();
 }
 module.exports = Object.assign(module.exports, { quickSearch });
+async function flowGuideAndInviteStep3(ctx, h) {
+  const p = await h.open(ctx, 'admin.html'); await reset(p); await p.reload(); await p.waitForTimeout(2500);
+  await p.click('aside a:has-text("Flow guide")'); await p.waitForTimeout(600);
+  const G = '[data-screen-label="08 Flow Guide"]';
+  h.ok('P: flow guide lists the whole flow', (await h.count(p, G + ' .gd-step')) === 12 && await h.has(p, G, 'Invite a vendor from SAP'));
+  await p.click(G + ' .gd-roles button:has-text("Approvers")'); await p.waitForTimeout(300);
+  h.ok('P: flow guide filters by role', (await h.count(p, G + ' .gd-step')) === 4 && await h.has(p, G + ' .gd-det', 'The vendor submits work'));
+  await p.click(G + ' .gd-det button:has-text("Next step")'); await p.waitForTimeout(300);
+  h.ok('P: flow guide next step', await h.has(p, G + ' .gd-det', 'Level 1 approval') && (await h.text(p, G + ' .gd-det')).toLowerCase().includes('step 2 of 4'));
+  await p.click(G + ' .gd-det button:has-text("Open approvals")'); await p.waitForTimeout(600);
+  h.ok('P: flow guide opens the real screen', (await h.count(p, '[data-screen-label="08 Supply Approvals"]')) === 1);
+  // invite wizard step 3: PARCO contact person dropdown, typed vendor contact and users, carried into activation
+  await goTo(p, 'Vendors', 'Onboarding'); await p.click('button:has-text("Invite vendor")'); await p.waitForTimeout(400);
+  const W = 'div[role=dialog]';
+  await p.click(W + ' .ux-vcard:has-text("V-1000242")'); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
+  await p.click(W + ' button:has-text("Supply —")'); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
+  h.ok('P: step 3 has one PARCO contact dropdown with designations', (await h.count(p, W + ' select')) === 1 && (await p.locator(W + ' select option').allInnerTexts()).some(t => t.includes('Vendor Relationship Officer')));
+  await p.selectOption(W + ' select', 'u-sana');
+  await p.fill(W + ' input[placeholder="Name"]', 'Mehwish Ali (Demo)'); await p.fill(W + ' input[placeholder="email@example.com"]', 'mehwish.pqm@example.com'); await p.click(W + ' .seg button:has-text("Finance")'); await p.click(W + ' button:has-text("Add user")'); await p.waitForTimeout(200);
+  await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
+  h.ok('P: review shows the PARCO contact person', await h.has(p, W, 'Sana Ahmed') && await h.has(p, W, 'Mehwish Ali'));
+  await p.click(W + ' button:has-text("Send invitation")'); await p.waitForTimeout(500);
+  const r = await p.evaluate(() => { const d = PARCO.load(); const o = d.onboarding[0]; return { plan: o.concernedPlan, users: PARCO.vendor(o.vendorId).users.length }; });
+  h.ok('P: invitation stores PARCO contact and both vendor users', r.plan === 'u-sana' && r.users === 2, JSON.stringify(r));
+  await reset(p); await p.close();
+}
+module.exports = Object.assign(module.exports, { flowGuideAndInviteStep3 });
+async function tableSearchAndFilters(ctx, h) {
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await goTo(a, 'Vendors', 'Directory'); const V = '[data-screen-label="08 Vendors"]';
+  const all = await h.count(a, V + ' tbody tr');
+  await a.click(V + ' .ux-tbar .ux-cat:has-text("In SAP")'); await a.waitForTimeout(250);
+  h.ok('P: vendor directory status filter', (await h.count(a, V + ' tbody tr')) === 7 && all === 11);
+  await a.fill(V + ' .ux-tbar input', 'Port Qasim'); await a.waitForTimeout(250);
+  h.ok('P: vendor directory search + filter combine', (await h.count(a, V + ' tbody tr')) === 1 && await h.has(a, V + ' .ux-tbar', '1 of 11'));
+  await goTo(a, 'Setup', 'Services master data'); const M = '[data-screen-label="08 Services Master Data"]';
+  await a.selectOption(M + ' .ux-tbar select', 'Marine'); await a.waitForTimeout(250);
+  h.ok('P: long filters use a dropdown (services by category)', (await h.count(a, M + ' tbody tr')) === 6);
+  await a.close();
+  const p = await h.open(ctx, 'index.html'); await h.login(p);
+  await p.click('aside nav a:has-text("Payment Insight")'); await p.waitForTimeout(800); const P = '[data-screen-label="06 Payment Insight"]';
+  await p.fill(P + ' .ux-tbar input', '0856'); await p.waitForTimeout(300);
+  h.ok('S: payment insight search', (await h.count(p, P + ' tbody tr')) === 1);
+  await p.close();
+}
+module.exports = Object.assign(module.exports, { tableSearchAndFilters });
