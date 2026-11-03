@@ -385,8 +385,8 @@ async function taxRulesAndLockedApproval(ctx, h) {
   h.ok('P: after switching, the assigned approver can decide', (await h.count(a, S + ' .ux-dr-foot button:not(.dis):has-text("Accept")')) === 1 && await h.has(a, 'header', 'Hassan Malik'));
   await actAs(a, 'Bilal Raza'); await goTo(a, 'Vendors', 'Directory'); const V = '[data-screen-label="08 Vendors"]';
   await a.click(V + ' tbody tr:has-text("V-1000236")'); await a.waitForTimeout(600);
-  h.ok('P: vendor shows its tax code rule', await h.has(a, V + ' .ux-taxr', '2 of 4 tax codes') && await h.has(a, V + ' .ux-taxr', 'default V5'));
-  await a.click(V + ' .ux-taxr button:has-text("Edit rule")'); await a.click(V + ' .ux-taxopt:has-text("V0")'); await a.fill(V + ' .ux-taxr input', 'Only VAT 5% invoices'); await a.click(V + ' .ux-taxr button:has-text("Save rule")'); await a.waitForTimeout(400);
+  h.ok('P: vendor has no tax rule by default (all master codes allowed)', await h.has(a, V + ' .ux-taxr', 'No rule yet'));
+  await a.click(V + ' .ux-taxr button:has-text("Set rule")'); for (const c of ['S1', 'V0', 'VE']) await a.click(V + ' .ux-taxopt:has-text("' + c + ' ·")'); await a.fill(V + ' .ux-taxr input', 'Only VAT 5% invoices'); await a.click(V + ' .ux-taxr button:has-text("Save rule")'); await a.waitForTimeout(400);
   h.ok('P: finance saves a narrower tax rule', JSON.stringify(await a.evaluate(() => PARCO.vendor('V-1000236').taxRule.codes)) === '["V5"]');
   await a.close();
   const p = await h.open(ctx, 'index.html'); await h.login(p);
@@ -394,7 +394,7 @@ async function taxRulesAndLockedApproval(ctx, h) {
   const C = '[data-screen-label="05 Create Invoice"]';
   await p.locator(C + ' :text("check_box_outline_blank")').first().click(); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400);
   const opts = await p.evaluate(() => [...document.querySelectorAll('select')].map(x => [...x.options].map(o => o.text)).filter(a => a.some(t => /V5|V0|VE/.test(t)))[0] || []);
-  h.ok('S: vendor invoice offers only the assigned tax code, preselected', opts.length === 2 && opts[1].startsWith('V5') && await h.has(p, C, 'From PARCO tax rates master data'), JSON.stringify(opts));
+  h.ok('S: vendor invoice offers only the assigned tax code, preselected', opts.length === 2 && opts[1].startsWith('V5') && await h.has(p, C, 'From the PARCO tax rates master data'), JSON.stringify(opts));
   await reset(p); await p.close();
 }
 module.exports = Object.assign(module.exports, { taxRulesAndLockedApproval });
@@ -409,7 +409,7 @@ async function fullFlowNewVendor(ctx, h) {
   await a.fill(TX + ' input[placeholder="e.g. S2"]', 's2'); await a.fill(TX + ' input[placeholder="e.g. 17"]', '17'); await a.fill(TX + ' input[placeholder^="e.g. Sales tax"]', 'Sales tax 17%');
   await a.click(TX + ' button:has-text("Save tax rate")'); await a.waitForTimeout(400);
   ok('F: tax rate added to master data', (await h.count(a, TX + ' tbody tr')) === nTax + 1 && await h.has(a, TX, '17 %'));
-  await a.click(TX + ' tbody tr:has-text("V5")'); await a.waitForTimeout(300); await a.click(TX + ' button:has-text("Remove")'); await a.waitForTimeout(300);
+  await a.evaluate(() => PARCO.setTaxRule('V-1000236', ['V5', 'V0'], 'V5', 'u-bilal', 'Test rule')); await a.waitForTimeout(300); await a.click(TX + ' tbody tr:has-text("V5")'); await a.waitForTimeout(300); await a.click(TX + ' button:has-text("Remove")'); await a.waitForTimeout(300);
   ok('F: tax rate used in a vendor rule cannot be removed', (await h.count(a, TX + ' tbody tr')) === nTax + 1);
   await a.click(TX + ' .ux-dr-close'); await a.waitForTimeout(200);
   // 2. services master data add / remove
