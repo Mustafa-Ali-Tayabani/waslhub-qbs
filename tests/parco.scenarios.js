@@ -337,8 +337,8 @@ async function flowGuideAndInviteStep3(ctx, h) {
   const W = 'div[role=dialog]';
   await p.click(W + ' .ux-vcard:has-text("V-1000242")'); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
   await p.click(W + ' button:has-text("Supply —")'); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
-  h.ok('P: step 3 has one PARCO contact dropdown with designations', (await h.count(p, W + ' select')) === 1 && (await p.locator(W + ' select option').allInnerTexts()).some(t => t.includes('Vendor Relationship Officer')));
-  await p.selectOption(W + ' select', 'u-sana');
+  h.ok('P: step 3 has one PARCO contact dropdown with designations', (await p.locator(W + ' .ux-f3 > section').nth(0).locator('select').count()) === 1 && (await p.locator(W + ' .ux-f3 > section').nth(0).locator('select option').allInnerTexts()).some(t => t.includes('Vendor Relationship Officer')));
+  await p.locator(W + ' .ux-f3 > section').nth(0).locator('select').selectOption('u-sana');
   await p.fill(W + ' input[placeholder="Name"]', 'Mehwish Ali (Demo)'); await p.fill(W + ' input[placeholder="email@example.com"]', 'mehwish.pqm@example.com'); await p.click(W + ' .seg button:has-text("Finance")'); await p.click(W + ' button:has-text("Add user")'); await p.waitForTimeout(200);
   await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250); await p.click(W + ' button:has-text("Continue")'); await p.waitForTimeout(250);
   h.ok('P: review shows the PARCO contact person', await h.has(p, W, 'Sana Ahmed') && await h.has(p, W, 'Mehwish Ali'));
@@ -423,9 +423,10 @@ async function fullFlowNewVendor(ctx, h) {
   const W = 'div[role=dialog]';
   await a.click(W + ' .ux-vcard:has-text("V-1000242")'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
   await a.click(W + ' button:has-text("Services —")'); await a.fill(W + ' .ux-svp input', 'drone'); await a.waitForTimeout(250); await a.click(W + ' .ux-svrow:has-text("Drone Inspection")'); await a.waitForTimeout(200);
-  ok('F: wizard shows services approvers with the new default', await h.has(a, W, 'Who approves Service work') && (await a.locator(W + ' .va-ed select').nth(0).inputValue()) === 'u-farhan');
+  await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  ok('F: people step shows services approvers prefilled with the default', await h.has(a, W, 'Approvers for this vendor') && await h.has(a, W, 'Who approves Service work') && (await a.locator(W + ' .va-ed select').nth(0).inputValue()) === 'u-farhan');
   await a.locator(W + ' .va-ed select').nth(1).selectOption('u-sana'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
-  await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
   ok('F: review lists the approvers', await h.has(a, W, 'Farhan Siddiqui → Sana Ahmed'));
   await a.click(W + ' button:has-text("Send invitation")'); await a.waitForTimeout(500);
   const onb = await a.evaluate(() => PARCO.load().onboarding[0].id);
@@ -531,3 +532,23 @@ async function sapPosRerouteAndProfilePicker(ctx, h) {
   await reset(a); await a.close();
 }
 module.exports = Object.assign(module.exports, { sapPosRerouteAndProfilePicker });
+async function usersAndRbac(ctx, h) {
+  const ok = h.ok;
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await goTo(a, 'Setup', 'Users'); const U = '[data-screen-label="08 Users"]';
+  ok('R: Users screen lists PARCO staff', (await h.count(a, U + ' tbody tr')) === 5);
+  await a.click(U + ' button:has-text("Add user")'); await a.fill(U + ' input[placeholder="e.g. Zara Khan"]', 'Zara Khan (Demo)'); await a.fill(U + ' input[placeholder="name@parco.example"]', 'zara@example.com'); await a.fill(U + ' input[placeholder="e.g. Plant Manager"]', 'Plant Manager'); await a.locator(U + ' .ux-drawer select').selectOption('PARCO_APPROVER_1'); await a.click(U + ' button:has-text("Save user")'); await a.waitForTimeout(400);
+  ok('R: user added and offered as an approver', (await h.count(a, U + ' tbody tr')) === 6 && await a.evaluate(() => PARCO.accounts().parco.some(x => x.name === 'Zara Khan (Demo)')));
+  await a.click(U + ' tbody tr:has-text("Hassan Malik")'); await a.waitForTimeout(300); await a.click(U + ' .seg button:has-text("Inactive")'); await a.click(U + ' button:has-text("Save user")'); await a.waitForTimeout(300);
+  ok('R: a user who is still an approver cannot be deactivated', await a.evaluate(() => PARCO.staff('u-hassan').active !== false) && await h.has(a, U, 'Reassign these before deactivating'));
+  await a.click(U + ' .ux-dr-close'); await a.waitForTimeout(200);
+  await goTo(a, 'Setup', 'Roles & permissions'); const RL = '[data-screen-label="08 Roles"]';
+  await a.locator(RL + ' .rb tbody tr:has-text("Approval routing") .rb-cell').nth(1).click(); await a.waitForTimeout(300);
+  ok('R: permission granted from the matrix', await a.evaluate(() => PARCO.can('u-bilal', 'routing')));
+  await actAs(a, 'Bilal Raza'); await goTo(a, 'Setup');
+  ok('R: Finance now sees Approval routing, but not Users', await h.has(a, 'header [role=tablist]', 'Approval routing') && !(await h.has(a, 'header [role=tablist]', 'Users')));
+  await actAs(a, 'Zara Khan');
+  ok('R: new approver signs in with the approver screens only', await h.has(a, 'aside nav', 'Approvals') && !(await h.has(a, 'aside nav', 'Finance')) && !(await h.has(a, 'aside nav', 'Setup')));
+  await reset(a); await a.close();
+}
+module.exports = Object.assign(module.exports, { usersAndRbac });
