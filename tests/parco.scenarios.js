@@ -101,11 +101,11 @@ async function adminVendorsAuditNotifications(ctx, h) {
   await p.screenshot({ path: h.SHOTS + '/p-vendor-detail.png' });
   await p.click(V + ' button:has-text("People & access")'); await p.waitForTimeout(300);
   h.ok('P: people tab lists vendor users with roles', await h.has(p, V, 'Vendor Organization Admin') && await h.has(p, V, 'Vendor Finance'));
-  await p.click(V + ' button:has-text("Contact & activity log")'); await p.waitForTimeout(300);
+  await p.click(V + ' .vr-tabs button:has-text("Activity")'); await p.waitForTimeout(300);
   await p.click(V + ' button:has-text("Log call")'); await p.fill(V + ' textarea', 'Called Lena about dispatch DSP-00081 evidence'); await p.click(V + ' button:has-text("Save")'); await p.waitForTimeout(500);
   h.ok('P: contact log entry added and audited', await h.has(p, V, 'Called Lena about dispatch') && await h.has(p, V, 'Contact logged (CALL)'));
-  await p.click(V + ' button:has-text("Invoices & submissions")'); await p.waitForTimeout(300);
-  h.ok('P: docs tab shows on-behalf invoice attribution', await h.has(p, V, 'PARCO on behalf · Farhan Siddiqui'));
+  await p.click(V + ' .vr-tabs button:has-text("Invoices")'); await p.waitForTimeout(300);
+  h.ok('P: vendor record Invoices tab shows on-behalf attribution', await h.has(p, V, 'PARCO on behalf · Farhan Siddiqui'));
   await p.locator(V + ' button:has-text("View PDF")').first().click(); await p.waitForTimeout(800);
   const src = await p.evaluate(() => { const f = document.querySelector('div[role=dialog] iframe'); return f ? f.getAttribute('src') : ''; });
   h.ok('P: View PDF opens real blob PDF viewer', src.startsWith('blob:'));
@@ -598,3 +598,22 @@ async function atlWhtAndVendorOrders(ctx, h) {
   await reset(a); await a.close();
 }
 module.exports = Object.assign(module.exports, { atlWhtAndVendorOrders });
+async function vendorRecord(ctx, h) {
+  const ok = h.ok;
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await goTo(a, 'Vendors', 'Directory'); const V = '[data-screen-label="08 Vendors"]';
+  await a.click(V + ' tbody tr:has-text("V-1000236")'); await a.waitForTimeout(600);
+  ok('V: vendor record opens full width with related counts', (await h.count(a, V + ' .ux-drawer.vrec')) === 1 && (await h.count(a, V + ' .vr-kpi')) === 5);
+  const tabs = (await a.locator(V + ' .vr-tabs button').allInnerTexts()).join('|');
+  ok('V: record has related-list tabs', ['Overview', 'Service orders', 'Supply dispatches', 'Client requests', 'Purchase orders', 'Invoices', 'People & access', 'Activity'].every(t => tabs.includes(t)), tabs);
+  await a.click(V + ' .vr-kpi:has-text("Client requests")'); await a.waitForTimeout(300);
+  ok('V: client requests list with the reference used by each order', await h.has(a, V, 'PARCO-CR-000412') && await h.has(a, V, 'PARCO-SRV-000110'));
+  await a.click(V + ' .vr-tabs button:has-text("Purchase orders")'); await a.waitForTimeout(300); await a.click(V + ' .vr-po .hd >> nth=0'); await a.waitForTimeout(200);
+  ok('V: purchase order lines expand inside the record', await h.has(a, V, 'Pallet Labels A5'));
+  await a.click(V + ' .vr-tabs button:has-text("Invoices")'); await a.waitForTimeout(300); await a.fill(V + ' .vr-bar input', '093'); await a.waitForTimeout(200);
+  ok('V: related lists are searchable', (await h.count(a, V + ' .vr-t tbody tr')) === 1);
+  await a.click(V + ' .vr-t tbody tr >> nth=0'); await a.waitForTimeout(600);
+  ok('V: a related invoice opens in Finance', await h.has(a, '[data-screen-label="08 Finance & Invoices"]', 'INV-DEMO-2026-093'));
+  await a.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord });
