@@ -166,8 +166,8 @@ async function sodAndServices(ctx, h) {
   const nSvc = await h.count(p, M + ' tbody tr'); h.ok('P: services master lists the SAP service master (100+)', nSvc >= 100);
   await p.click(M + ' tbody tr:has-text("SVC-MECH-01")'); await p.waitForTimeout(400);
   h.ok('P: SAP-owned service read-only with 2 eligible vendors', await h.has(p, M, 'SAP-owned master record') && (await h.count(p, M + ' a:has-text("V-1000")')) === 2);
-  await p.click(M + ' button:has-text("Add PARCO draft service")'); await p.fill(M + ' label:has-text("Service name") input', 'Scaffolding Services (Demo)'); await p.click(M + ' button:has-text("Save draft")'); await p.waitForTimeout(500);
-  h.ok('P: PARCO draft service labelled and listed', (await h.count(p, M + ' tbody tr')) === nSvc + 1 && await h.has(p, M, 'PARCO draft'));
+  await p.click(M + ' button:has-text("Add service")'); await p.fill(M + ' label:has-text("Service name") input', 'Heliport Maintenance (Demo)'); await p.click(M + ' button:has-text("Save")'); await p.waitForTimeout(500);
+  h.ok('P: PARCO-added service labelled and listed', (await h.count(p, M + ' tbody tr')) === nSvc + 1 && await h.has(p, M, 'Heliport Maintenance'));
   await p.screenshot({ path: h.SHOTS + '/p-services-master.png' });
   await p.close();
 }
@@ -325,7 +325,7 @@ async function flowGuideAndInviteStep3(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p); await p.reload(); await p.waitForTimeout(2500);
   await p.click('aside a:has-text("Flow guide")'); await p.waitForTimeout(600);
   const G = '[data-screen-label="08 Flow Guide"]';
-  h.ok('P: flow guide lists the whole flow', (await h.count(p, G + ' .gd-step')) === 12 && await h.has(p, G, 'Invite a vendor from SAP'));
+  h.ok('P: flow guide lists the whole flow', (await h.count(p, G + ' .gd-step')) === 13 && await h.has(p, G, 'Invite a vendor from SAP'));
   await p.click(G + ' .gd-roles button:has-text("Approvers")'); await p.waitForTimeout(300);
   h.ok('P: flow guide filters by role', (await h.count(p, G + ' .gd-step')) === 4 && await h.has(p, G + ' .gd-det', 'The vendor submits work'));
   await p.click(G + ' .gd-det button:has-text("Next step")'); await p.waitForTimeout(300);
@@ -389,3 +389,89 @@ async function taxRulesAndLockedApproval(ctx, h) {
   await reset(p); await p.close();
 }
 module.exports = Object.assign(module.exports, { taxRulesAndLockedApproval });
+// Full lifecycle with a vendor that is not part of the fixtures: master data → routing → invite → accept → activate → client request → work → 2 approvals → SAP → invoice-ready.
+async function fullFlowNewVendor(ctx, h) {
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  const ok = h.ok;
+  // 1. tax rate master data
+  await goTo(a, 'Setup', 'Tax rates'); const TX = '[data-screen-label="08 Tax Rates"]';
+  const nTax = await h.count(a, TX + ' tbody tr');
+  await a.click(TX + ' button:has-text("Add tax rate")'); await a.waitForTimeout(300);
+  await a.fill(TX + ' input[placeholder="e.g. S2"]', 's2'); await a.fill(TX + ' input[placeholder="e.g. 17"]', '17'); await a.fill(TX + ' input[placeholder^="e.g. Sales tax"]', 'Sales tax 17%');
+  await a.click(TX + ' button:has-text("Save tax rate")'); await a.waitForTimeout(400);
+  ok('F: tax rate added to master data', (await h.count(a, TX + ' tbody tr')) === nTax + 1 && await h.has(a, TX, '17 %'));
+  await a.click(TX + ' tbody tr:has-text("V5")'); await a.waitForTimeout(300); await a.click(TX + ' button:has-text("Remove")'); await a.waitForTimeout(300);
+  ok('F: tax rate used in a vendor rule cannot be removed', (await h.count(a, TX + ' tbody tr')) === nTax + 1);
+  await a.click(TX + ' .ux-dr-close'); await a.waitForTimeout(200);
+  // 2. services master data add / remove
+  await goTo(a, 'Setup', 'Services master data'); const M = '[data-screen-label="08 Services Master Data"]';
+  const nSvc = await a.evaluate(() => PARCO.load().services.length);
+  await a.click(M + ' button:has-text("Add service")'); await a.fill(M + ' label:has-text("Service name") input', 'Drone Inspection (Demo)'); await a.fill(M + ' label:has-text("Category") input', 'Inspection'); await a.click(M + ' button:has-text("Save")'); await a.waitForTimeout(400);
+  ok('F: service added and active', await a.evaluate(() => PARCO.load().services.some(s => s.name === 'Drone Inspection (Demo)' && s.status === 'Active')));
+  await a.fill(M + ' .ux-tbar input', 'Tug Services'); await a.waitForTimeout(250); await a.click(M + ' tbody tr:has-text("SVC-MAR-010")'); await a.waitForTimeout(300); await a.click(M + ' button:has-text("Remove from master data")'); await a.waitForTimeout(300);
+  ok('F: unused service removed', !(await a.evaluate(() => PARCO.load().services.some(s => s.id === 'SVC-MAR-010'))) && (await a.evaluate(() => PARCO.load().services.length)) === nSvc);
+  await a.fill(M + ' .ux-tbar input', 'SVC-MECH-01'); await a.waitForTimeout(250); await a.click(M + ' tbody tr:has-text("SVC-MECH-01")'); await a.waitForTimeout(300); await a.click(M + ' button:has-text("Remove from master data")'); await a.waitForTimeout(300);
+  ok('F: service in use cannot be removed', await a.evaluate(() => PARCO.load().services.some(s => s.id === 'SVC-MECH-01')));
+  // 3. approval routing
+  await goTo(a, 'Setup', 'Approval routing'); const RT = '[data-screen-label="08 Approval Routing"]';
+  await a.locator(RT + ' .rt-card').nth(1).locator('select').nth(0).selectOption('u-farhan'); await a.locator(RT + ' .rt-card').nth(1).locator('select').nth(1).selectOption('u-farhan'); await a.waitForTimeout(200);
+  ok('F: routing refuses the same person twice', await h.has(a, RT, 'must be two different people') && (await h.count(a, RT + ' .rt-card >> nth=1 >> button.dis')) === 1);
+  await a.locator(RT + ' .rt-card').nth(1).locator('select').nth(1).selectOption('u-bilal'); await a.locator(RT + ' .rt-card').nth(1).locator('button:has-text("Save routing")').click(); await a.waitForTimeout(300);
+  ok('F: services routing saved', JSON.stringify(await a.evaluate(() => PARCO.approversFor(null, 'SERVICE'))) === '{"1":"u-farhan","2":"u-bilal","source":"default"}');
+  // 4. invite a new vendor with services and vendor-specific Level 2
+  await goTo(a, 'Vendors', 'Onboarding'); await a.click('button:has-text("Invite vendor")'); await a.waitForTimeout(300);
+  const W = 'div[role=dialog]';
+  await a.click(W + ' .ux-vcard:has-text("V-1000242")'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  await a.click(W + ' button:has-text("Services —")'); await a.fill(W + ' .ux-svp input', 'drone'); await a.waitForTimeout(250); await a.click(W + ' .ux-svrow:has-text("Drone Inspection")'); await a.waitForTimeout(200);
+  ok('F: wizard shows services approvers with the new default', await h.has(a, W, 'Who approves Service work') && (await a.locator(W + ' .va-ed select').nth(0).inputValue()) === 'u-farhan');
+  await a.locator(W + ' .va-ed select').nth(1).selectOption('u-sana'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  ok('F: review lists the approvers', await h.has(a, W, 'Farhan Siddiqui → Sana Ahmed'));
+  await a.click(W + ' button:has-text("Send invitation")'); await a.waitForTimeout(500);
+  const onb = await a.evaluate(() => PARCO.load().onboarding[0].id);
+  // 5. vendor accepts by magic link
+  const v = await h.open(ctx, 'index.html', '?onboarding=' + onb + '&channel=portal'); const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
+  await v.locator(MG + ' button:has-text("check_box_outline_blank")').first().click(); await v.waitForTimeout(200); await v.click(MG + ' button:has-text("Accept onboarding")'); await v.waitForTimeout(600);
+  ok('F: vendor accepted through the magic link', await v.evaluate(id => PARCO.byId(PARCO.load().onboarding, id).status, onb) === 'VENDOR_ACCEPTED');
+  await v.close();
+  // 6. PARCO activates
+  await a.reload(); await a.waitForTimeout(2500); await goTo(a, 'Vendors', 'Onboarding'); await a.click('tbody tr:has-text("' + onb + '")'); await a.waitForTimeout(500);
+  await a.click('.ux-dr-foot button:has-text("Activate vendor")'); await a.waitForTimeout(500);
+  ok('F: vendor activated with Concerned Person and its own approvers', await a.evaluate(() => { const x = PARCO.vendor('V-1000242'); return x.status === 'ACTIVE' && !!x.concerned.primary && x.approvers.SERVICE[2] === 'u-sana'; }));
+  // 7. client request for the new service
+  await goTo(a, 'Approvals', 'Services'); const SV = '[data-screen-label="08 Service Approvals"]';
+  await a.click(SV + ' button:has-text("Issue client request")'); await a.waitForTimeout(300);
+  await a.selectOption(SV + ' select >> nth=0', 'V-1000242'); await a.waitForTimeout(200);
+  const svcId = await a.evaluate(() => PARCO.load().services.find(s => s.name === 'Drone Inspection (Demo)').id);
+  await a.selectOption(SV + ' select >> nth=1', svcId); await a.fill(SV + ' input[placeholder="45000124xx"]', '4500012499'); await a.locator(SV + ' label:has-text("PARCO site") input').fill('Port Qasim Jetty (Demo site)'); await a.locator(SV + ' label:has-text("Units") input').fill('3'); await a.locator(SV + ' button:text-is("Issue")').click(); await a.waitForTimeout(500);
+  const cr = await a.evaluate(() => PARCO.load().clientRequests.filter(c => c.vendorId === 'V-1000242')[0]); ok('F: client request issued to the new vendor', !!cr);
+  // 8. the new vendor signs in and submits work
+  const p = await h.open(ctx, 'index.html'); await p.evaluate(() => PARCO.setSession({ vendorUser: null })); await p.reload(); await p.waitForTimeout(2500);
+  await p.click('.ux-dd-btn'); await p.waitForTimeout(200);
+  ok('F: new vendor user is a demo account', await h.has(p, '.ux-dd-menu', 'Port Qasim Marine Services'));
+  await p.click('.ux-dd-opt:has-text("Adnan Sheikh")'); await p.waitForTimeout(1200);
+  ok('F: vendor portal shows the new company, not the demo one', await h.has(p, '[data-screen-label="02 Dashboard"]', 'Port Qasim Marine Services') && !(await h.has(p, '[data-screen-label="02 Dashboard"]', 'Indus Technical')));
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(600);
+  ok('F: SAP documents are empty for the new vendor (no SAP sync yet)', !(await h.has(p, 'body', 'NIS-INV-2026-0871')));
+  await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(600); const V = '[data-screen-label="03 Services Workflow"]';
+  await p.click(V + ' tbody tr:has-text("' + cr.id + '") button:has-text("Submit work")'); await p.waitForTimeout(300);
+  await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(700);
+  const sub = await p.evaluate(() => PARCO.load().submissions.filter(s => s.vendorId === 'V-1000242')[0]);
+  const tasks = await p.evaluate(id => PARCO.load().tasks.filter(t => t.submissionId === id).map(t => t.approverId), sub && sub.id);
+  ok('F: work routed to the chosen approvers (Farhan → Sana)', !!sub && tasks.join(',') === 'u-farhan,u-sana', JSON.stringify(tasks));
+  await p.close();
+  // 9. two approvals by the routed people, then SAP
+  await actAs(a, 'Farhan Siddiqui');
+  ok('F: Concerned Person who is an approver gets Approvals', await h.has(a, 'aside nav', 'Approvals'));
+  await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:not(.dis):has-text("Accept")'); await a.waitForTimeout(500);
+  await actAs(a, 'Sana Ahmed'); await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' button:has-text("All submissions")').catch(() => {}); await a.waitForTimeout(200); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:not(.dis):has-text("Accept")'); await a.waitForTimeout(500);
+  await actAs(a, 'Ayesha Khan'); await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' button:has-text("All submissions")').catch(() => {}); await a.waitForTimeout(200); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:has-text("Simulate SAP")'); await a.waitForTimeout(500);
+  ok('F: approved by both levels and confirmed by SAP → ready for invoice', await a.evaluate(id => PARCO.byId(PARCO.load().submissions, id).status, sub.id) === 'READY_FOR_INVOICE');
+  // 10. vendor sees the new tax rate on a standalone invoice
+  const q = await h.open(ctx, 'index.html'); await q.evaluate(() => PARCO.setSession({ vendorUser: 'adnan.pqm@example.com' })); await q.reload(); await q.waitForTimeout(2500);
+  await q.click('button:has-text("New document")'); await q.click('button:has-text("Standalone invoice")'); await q.waitForTimeout(600);
+  const opts = await q.evaluate(() => [...document.querySelectorAll('select')].map(x => [...x.options].map(o => o.text)).filter(a => a.some(t => /V5|V0|S2/.test(t)))[0] || []);
+  ok('F: new tax rate offered to a vendor without a tax rule', opts.some(t => t.startsWith('S2 · Sales tax 17%')), JSON.stringify(opts));
+  await reset(q); await q.close(); await a.close();
+}
+module.exports = Object.assign(module.exports, { fullFlowNewVendor });
