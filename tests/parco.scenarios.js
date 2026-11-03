@@ -394,7 +394,7 @@ async function taxRulesAndLockedApproval(ctx, h) {
   const C = '[data-screen-label="05 Create Invoice"]';
   await p.locator(C + ' :text("check_box_outline_blank")').first().click(); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(400);
   const opts = await p.evaluate(() => [...document.querySelectorAll('select')].map(x => [...x.options].map(o => o.text)).filter(a => a.some(t => /V5|V0|VE/.test(t)))[0] || []);
-  h.ok('S: vendor invoice offers only the assigned tax code, preselected', opts.length === 2 && opts[1].startsWith('V5') && await h.has(p, C, 'PARCO Finance assigned'), JSON.stringify(opts));
+  h.ok('S: vendor invoice offers only the assigned tax code, preselected', opts.length === 2 && opts[1].startsWith('V5') && await h.has(p, C, 'From PARCO tax rates master data'), JSON.stringify(opts));
   await reset(p); await p.close();
 }
 module.exports = Object.assign(module.exports, { taxRulesAndLockedApproval });
