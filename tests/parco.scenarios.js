@@ -475,3 +475,59 @@ async function fullFlowNewVendor(ctx, h) {
   await reset(q); await q.close(); await a.close();
 }
 module.exports = Object.assign(module.exports, { fullFlowNewVendor });
+// SAP POs for new vendors, invoicing them, moving open approvals, service picker in the vendor profile.
+async function sapPosRerouteAndProfilePicker(ctx, h) {
+  const ok = h.ok;
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  // set up an active Supply + Services vendor (onboarding UI is covered elsewhere)
+  await a.evaluate(() => { const r = PARCO.createOnboarding({ vendorId: 'V-1000242', capabilities: ['SUPPLY', 'SERVICES'], serviceIds: ['SVC-INSP-03'], contactName: 'Adnan Sheikh (Demo)', email: 'adnan.pqm@example.com', users: [{ name: 'Adnan Sheikh (Demo)', email: 'adnan.pqm@example.com', role: 'VENDOR_ORG_ADMIN' }], channels: ['PORTAL', 'EMAIL'], dueDays: 7, actorId: 'u-ayesha', concernedId: 'u-farhan' }); const o = r.request; PARCO.decideOnboarding(o.id, o.version, 'ACCEPT', 'PORTAL', 'Adnan Sheikh (Demo)', ''); PARCO.activateVendor(o.id, 'u-ayesha'); });
+  const pos = await a.evaluate(() => PARCO.posFor('V-1000242').map(p => p.no));
+  ok('M: activation syncs simulated SAP purchase orders', pos.length === 2, JSON.stringify(pos));
+  // admin issues a client request → service PO line
+  await a.evaluate(() => PARCO.createClientRequest({ vendorId: 'V-1000242', serviceId: 'SVC-INSP-03', site: 'Port Qasim Jetty (Demo site)', sapPo: '4500012777', units: 2, actorId: 'u-ayesha' }));
+  ok('M: client request creates the service PO line', await a.evaluate(() => PARCO.posFor('V-1000242').some(p => p.no === '4500012777' && p.kind === 'Service' && p.lines.length === 1)));
+  // vendor: SAP documents now list its POs, then dispatch against one
+  const p = await h.open(ctx, 'index.html'); await p.evaluate(() => PARCO.setSession({ vendorUser: 'adnan.pqm@example.com' })); await p.reload(); await p.waitForTimeout(2500);
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(800);
+  ok('M: new vendor sees its own POs in SAP documents', await h.has(p, '[data-screen-label="03 Supplier Workflow"]', pos[0]) && !(await h.has(p, '[data-screen-label="03 Supplier Workflow"]', '4500012345')));
+  await p.click('[role=tab]:has-text("Supply dispatches")'); await p.waitForTimeout(600); const S = '[data-screen-label="03 Supply Workflow"]';
+  await p.click(S + ' button:has-text("New dispatch")'); await p.waitForTimeout(300); await p.click(S + ' button:has-text("PO ' + pos[0] + '")'); await p.waitForTimeout(300);
+  await p.locator(S + ' tbody tr:has-text("Gate Valve") input').fill('5'); await p.fill(S + ' input[placeholder="e.g. DN-58940"]', 'DN-PQ-001'); await p.click(S + ' button:has-text("Add file")'); await p.waitForTimeout(150);
+  await p.click(S + ' button:has-text("Submit dispatch for PARCO approval")'); await p.waitForTimeout(600);
+  const dsp = await p.evaluate(() => PARCO.load().submissions.find(s => s.vendorId === 'V-1000242' && s.type === 'SUPPLY'));
+  ok('M: dispatch against a generated PO submitted', !!dsp && dsp.po === pos[0]);
+  // reroute: change supply routing, move the open approvals
+  await goTo(a, 'Setup', 'Approval routing'); const RT = '[data-screen-label="08 Approval Routing"]';
+  await a.locator(RT + ' .rt-card').nth(0).locator('select').nth(0).selectOption('u-bilal'); await a.locator(RT + ' .rt-card').nth(0).locator('button:has-text("Save routing")').click(); await a.waitForTimeout(300);
+  ok('M: routing shows open approvals still with the old approver', await h.has(a, RT, 'still with a different approver'));
+  await a.locator(RT + ' .rt-card').nth(0).locator('button:has-text("Move them to these approvers")').click(); await a.waitForTimeout(300);
+  ok('M: open approvals moved to the new Level 1', await a.evaluate(id => PARCO.load().tasks.find(t => t.submissionId === id && t.level === 1).approverId, dsp.id) === 'u-bilal' && await a.evaluate(() => PARCO.load().tasks.find(t => t.submissionId === 'PARCO-DSP-00081' && t.level === 1).approverId) === 'u-bilal');
+  // approve, SAP confirm → goods receipt posted on the PO
+  await a.evaluate(id => { const d = PARCO.load(); const t1 = d.tasks.find(t => t.submissionId === id && t.level === 1); PARCO.decideApproval(t1.id, t1.submissionVersion, 'APPROVE', 'APP', t1.approverId, ''); const t2 = PARCO.load().tasks.find(t => t.submissionId === id && t.level === 2); PARCO.decideApproval(t2.id, t2.submissionVersion, 'APPROVE', 'APP', t2.approverId, ''); PARCO.confirmSap(id, 'u-ayesha'); }, dsp.id);
+  ok('M: SAP goods receipt adds the received quantity to the PO', await a.evaluate(no => PARCO.posFor('V-1000242').find(p => p.no === no).lines[0].rec, pos[0]) === 5);
+  // vendor invoices the received quantity → real invoice for Finance
+  await p.reload(); await p.waitForTimeout(2500);
+  await p.click('button:has-text("New document")'); await p.click('button:has-text("Invoice against PO")'); await p.waitForTimeout(600);
+  const C = '[data-screen-label="05 Create Invoice"]';
+  await p.click(C + ' button:has-text("' + pos[0] + '")'); await p.waitForTimeout(300); await p.locator(C + ' :text("check_box_outline_blank")').first().click(); await p.waitForTimeout(150);
+  await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(300); await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(300);
+  await p.locator(C + ' input').first().fill('PQ-INV-0001'); await p.waitForTimeout(100);
+  const taxSel = p.locator(C + ' select').first(); const opt = await taxSel.locator('option').nth(1).getAttribute('value'); await taxSel.selectOption(opt);
+  await p.locator(C + ' button:has-text("Attach")').first().click().catch(() => {}); await p.locator(C + ' button:has-text("Upload")').first().click().catch(() => {}); await p.waitForTimeout(200);
+  await p.click(C + ' button:has-text("Continue")'); await p.waitForTimeout(300);
+  await p.locator(C + ' :text("check_box_outline_blank")').first().click().catch(() => {}); await p.waitForTimeout(150);
+  await p.locator(C + ' button:has-text("Submit")').last().click(); await p.waitForTimeout(600);
+  const inv = await p.evaluate(() => PARCO.load().invoices.find(i => i.id === 'PQ-INV-0001'));
+  ok('M: vendor invoice for a generated PO reaches PARCO Finance', !!inv && inv.vendorId === 'V-1000242' && inv.po === pos[0], JSON.stringify(inv && inv.status));
+  ok('M: invoiced quantity is recorded on the PO', await p.evaluate(no => PARCO.posFor('V-1000242').find(p => p.no === no).lines[0].inv, pos[0]) === 5);
+  await p.close();
+  // vendor profile: searchable service picker
+  await goTo(a, 'Vendors', 'Directory'); const V = '[data-screen-label="08 Vendors"]';
+  await a.click(V + ' tbody tr:has-text("V-1000242")'); await a.waitForTimeout(500);
+  await a.click(V + ' button:has-text("Change capability")'); await a.waitForTimeout(300);
+  ok('M: vendor profile uses the searchable service picker', (await h.count(a, V + ' .ux-svp input')) === 1 && await h.has(a, V + ' .ux-svp', 'of 105') );
+  await a.fill(V + ' .ux-svp input', 'diving'); await a.waitForTimeout(200); await a.click(V + ' .ux-svrow:has-text("Diving Services")'); await a.fill(V + ' input[placeholder="Reason (required for audit)"]', 'Adds diving work'); await a.click(V + ' button:has-text("Save change")'); await a.waitForTimeout(400);
+  ok('M: service added from the profile picker', await a.evaluate(() => PARCO.vendor('V-1000242').serviceIds.some(id => /MAR-04/.test(id))));
+  await reset(a); await a.close();
+}
+module.exports = Object.assign(module.exports, { sapPosRerouteAndProfilePicker });
