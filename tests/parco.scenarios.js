@@ -265,9 +265,18 @@ async function supplierSupplyAndServices(ctx, h) {
   await p.click(T + ' [role=tab]:has-text("Service work")'); await p.waitForTimeout(800);
   const V = '[data-screen-label="03 Services Workflow"]';
   h.ok('S: services shows enabled services and 2 client requests', await h.has(p, V, 'Equipment Inspection') && (await p.locator(V + ' table').nth(0).locator('tbody tr').count()) === 2 && await h.has(p, V, 'Mehmoodkot'));
-  await p.click(V + ' tbody tr:has-text("PARCO-CR-000412") button:has-text("Submit work")'); await p.waitForTimeout(300);
-  h.ok('S: service form bound to the PARCO client request', await h.has(p, V, 'Submit service work · PARCO-CR-000412') && await h.has(p, V, '4500012388 / 00020'));
-  await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(800);
+  await p.click(V + ' button:has-text("New service order")'); await p.waitForTimeout(300);
+  await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-999999'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  h.ok('S: wrong PARCO reference stops the vendor', await h.has(p, V, 'reference number is incorrect') && (await h.count(p, V + ' button:has-text("Submit for PARCO approval")')) === 0);
+  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000413'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  h.ok('S: reference for another service is rejected', await h.has(p, V, 'not the service you selected'));
+  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'parco-cr-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  h.ok('S: correct reference unlocks the order with SAP PO data', await h.has(p, V, 'Reference verified · PARCO-CR-000412') && await h.has(p, V, '4500012388 / 00020'));
+  h.ok('S: ATL defaults to the PARCO record and asks which WHT applies', await h.has(p, V, 'Which withholding tax applies'));
+  await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(300);
+  h.ok('S: ATL vendor must choose a WHT category', (await p.evaluate(() => PARCO.load().submissions.filter(s => s.crId === 'PARCO-CR-000412').length)) === 0);
+  await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S2'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(800);
+  h.ok('S: service order stores ATL declaration and WHT', JSON.stringify(await p.evaluate(() => { const s = PARCO.load().submissions.find(x => x.crId === 'PARCO-CR-000412'); return s && [s.atlDeclared, s.wht.code, s.wht.rate]; })) === '[true,"WHT-S2",0.11]');
   h.ok('S: concurrent service submission created while supply pending', await h.has(p, V, 'PARCO-SRV-000113') && await h.has(p, V, 'Level 1 · Hassan Malik'));
   await p.close();
   const a = await h.open(ctx, 'admin.html'); await goTo(a, 'Approvals', 'Supply');
@@ -455,7 +464,9 @@ async function fullFlowNewVendor(ctx, h) {
   await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(600);
   ok('F: SAP documents are empty for the new vendor (no SAP sync yet)', !(await h.has(p, 'body', 'NIS-INV-2026-0871')));
   await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(600); const V = '[data-screen-label="03 Services Workflow"]';
-  await p.click(V + ' tbody tr:has-text("' + cr.id + '") button:has-text("Submit work")'); await p.waitForTimeout(300);
+  await p.click(V + ' tbody tr:has-text("' + cr.id + '") button:has-text("Create service order")'); await p.waitForTimeout(300);
+  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', cr.id); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  ok('F: non-ATL vendor sees the non-ATL withholding note', await h.has(p, V, 'Not on the ATL'));
   await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(700);
   const sub = await p.evaluate(() => PARCO.load().submissions.filter(s => s.vendorId === 'V-1000242')[0]);
   const tasks = await p.evaluate(id => PARCO.load().tasks.filter(t => t.submissionId === id).map(t => t.approverId), sub && sub.id);
@@ -552,3 +563,38 @@ async function usersAndRbac(ctx, h) {
   await reset(a); await a.close();
 }
 module.exports = Object.assign(module.exports, { usersAndRbac });
+async function atlWhtAndVendorOrders(ctx, h) {
+  const ok = h.ok;
+  const p = await h.open(ctx, 'index.html'); await reset(p); await h.login(p);
+  // supply dispatch: ATL toggle stored
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(500); await p.click('[role=tab]:has-text("Supply dispatches")'); await p.waitForTimeout(500); const S = '[data-screen-label="03 Supply Workflow"]';
+  await p.click(S + ' button:has-text("New dispatch")'); await p.click(S + ' button:has-text("PO 4500012345")'); await p.waitForTimeout(300);
+  ok('W: dispatch asks for ATL status', await h.has(p, S, 'Active Taxpayer List'));
+  await p.click(S + ' .so-atl button:has-text("No")'); await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').fill('100'); await p.fill(S + ' input[placeholder="e.g. DN-58940"]', 'DN-ATL-1'); await p.click(S + ' button:has-text("Add file")'); await p.click(S + ' button:has-text("Submit dispatch for PARCO approval")'); await p.waitForTimeout(500);
+  const dsp = await p.evaluate(() => PARCO.load().submissions.find(s => s.deliveryNote === 'DN-ATL-1'));
+  ok('W: dispatch stores "not on ATL" with the non-ATL goods rate', !!dsp && dsp.atlDeclared === false && dsp.wht && dsp.wht.code === 'WHT-G1' && dsp.wht.rate === 0.11);
+  // service order with WHT
+  await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(500); const V = '[data-screen-label="03 Services Workflow"]';
+  await p.click(V + ' button:has-text("New service order")'); await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S1'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(600);
+  const so = await p.evaluate(() => PARCO.load().submissions.find(s => s.crId === 'PARCO-CR-000412'));
+  await p.close();
+  const a = await h.open(ctx, 'admin.html'); await a.waitForTimeout(300);
+  // vendor list shows service orders
+  await goTo(a, 'Vendors', 'Directory'); const VD = '[data-screen-label="08 Vendors"]';
+  ok('W: vendor list shows service orders per vendor', (await h.text(a, VD + ' thead')).toLowerCase().includes('service orders') && await h.has(a, VD + ' tbody tr:has-text("V-1000236")', '2 orders · 2 open'));
+  // approval panel shows declaration + mismatch for the dispatch
+  await goTo(a, 'Approvals', 'Supply'); const SA = '[data-screen-label="08 Supply Approvals"]'; await a.click(SA + ' tbody tr:has-text("' + dsp.id + '")'); await a.waitForTimeout(500);
+  ok('W: approver sees the ATL declaration and the mismatch with PARCO record', await h.has(a, SA, 'NOT on the Active Taxpayer List') && await h.has(a, SA, 'does not match'));
+  await goTo(a, 'Approvals', 'Services'); const SV = '[data-screen-label="08 Service Approvals"]'; await a.click(SV + ' tbody tr:has-text("' + so.id + '")'); await a.waitForTimeout(500);
+  ok('W: service approval shows WHT category and rate', await h.has(a, SV, 'WHT-S1') && await h.has(a, SV, '8% (ATL rate)'));
+  // concerned person sees the orders on assigned vendors
+  await actAs(a, 'Farhan Siddiqui'); await goTo(a, 'Vendors', 'Assigned to me');
+  ok('W: Concerned Person sees the vendor\'s service orders', await h.has(a, '[data-screen-label="08 Assigned Vendors"]', so.id));
+  // WHT master maintained by Finance
+  await actAs(a, 'Bilal Raza'); await goTo(a, 'Setup', 'Tax rates'); const TX = '[data-screen-label="08 Tax Rates"]';
+  await a.click(TX + ' button:has-text("Add WHT category")'); await a.fill(TX + ' input[placeholder="e.g. WHT-S4"]', 'WHT-S4'); await a.fill(TX + ' input[placeholder="e.g. Services — construction"]', 'Services — construction'); await a.fill(TX + ' input[placeholder="e.g. 8"]', '7'); await a.fill(TX + ' input[placeholder="e.g. 16"]', '14'); await a.click(TX + ' button:has-text("Save WHT category")'); await a.waitForTimeout(300);
+  ok('W: Finance adds a WHT category that vendors can pick', await a.evaluate(() => PARCO.whtCodes().some(w => w.code === 'WHT-S4' && w.atlRate === 0.07)));
+  await reset(a); await a.close();
+}
+module.exports = Object.assign(module.exports, { atlWhtAndVendorOrders });
