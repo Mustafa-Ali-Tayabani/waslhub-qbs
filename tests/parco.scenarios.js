@@ -265,7 +265,7 @@ async function supplierSupplyAndServices(ctx, h) {
   await p.click(T + ' [role=tab]:has-text("Service work")'); await p.waitForTimeout(800);
   const V = '[data-screen-label="03 Services Workflow"]';
   h.ok('S: services shows enabled services and 2 client requests', await h.has(p, V, 'Equipment Inspection') && (await p.locator(V + ' table').nth(0).locator('tbody tr').count()) === 2 && await h.has(p, V, 'Mehmoodkot'));
-  await p.click(V + ' button:has-text("New service order")'); await p.waitForTimeout(300);
+  await p.click(V + ' button:has-text("Service Invoice")'); await p.waitForTimeout(300);
   await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-999999'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   h.ok('S: wrong PARCO reference stops the vendor', await h.has(p, V, 'reference number is incorrect') && (await h.count(p, V + ' button:has-text("Submit for PARCO approval")')) === 0);
   await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000413'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
@@ -273,7 +273,7 @@ async function supplierSupplyAndServices(ctx, h) {
   await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'parco-cr-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   h.ok('S: correct reference unlocks the order with SAP PO data', await h.has(p, V, 'Reference verified · PARCO-CR-000412') && await h.has(p, V, '4500012388 / 00020'));
   h.ok('S: ATL defaults to the PARCO record and asks which WHT applies', await h.has(p, V, 'Which withholding tax applies'));
-  await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(300);
+  await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(300);
   h.ok('S: ATL vendor must choose a WHT category', (await p.evaluate(() => PARCO.load().submissions.filter(s => s.crId === 'PARCO-CR-000412').length)) === 0);
   await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S2'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(800);
   h.ok('S: service order stores ATL declaration and WHT', JSON.stringify(await p.evaluate(() => { const s = PARCO.load().submissions.find(x => x.crId === 'PARCO-CR-000412'); return s && [s.atlDeclared, s.wht.code, s.wht.rate]; })) === '[true,"WHT-S2",0.11]');
@@ -467,7 +467,7 @@ async function fullFlowNewVendor(ctx, h) {
   await p.click(V + ' tbody tr:has-text("' + cr.id + '") button:has-text("Create service order")'); await p.waitForTimeout(300);
   await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', cr.id); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   ok('F: non-ATL vendor sees the non-ATL withholding note', await h.has(p, V, 'Not on the ATL'));
-  await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(700);
+  await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(700);
   const sub = await p.evaluate(() => PARCO.load().submissions.filter(s => s.vendorId === 'V-1000242')[0]);
   const tasks = await p.evaluate(id => PARCO.load().tasks.filter(t => t.submissionId === id).map(t => t.approverId), sub && sub.id);
   ok('F: work routed to the chosen approvers (Farhan → Sana)', !!sub && tasks.join(',') === 'u-farhan,u-sana', JSON.stringify(tasks));
@@ -575,8 +575,8 @@ async function atlWhtAndVendorOrders(ctx, h) {
   ok('W: dispatch stores "not on ATL" with the non-ATL goods rate', !!dsp && dsp.atlDeclared === false && dsp.wht && dsp.wht.code === 'WHT-G1' && dsp.wht.rate === 0.11);
   // service order with WHT
   await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(500); const V = '[data-screen-label="03 Services Workflow"]';
-  await p.click(V + ' button:has-text("New service order")'); await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
-  await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S1'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(600);
+  await p.click(V + ' button:has-text("Service Invoice")'); await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S1'); await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(600);
   const so = await p.evaluate(() => PARCO.load().submissions.find(s => s.crId === 'PARCO-CR-000412'));
   await p.close();
   const a = await h.open(ctx, 'admin.html'); await a.waitForTimeout(300);
@@ -616,4 +616,23 @@ async function vendorRecord(ctx, h) {
   ok('V: a related invoice opens in Finance', await h.has(a, '[data-screen-label="08 Finance & Invoices"]', 'INV-DEMO-2026-093'));
   await a.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord });
+async function serviceInvoiceSapFbr(ctx, h) {
+  const ok = h.ok;
+  const p = await h.open(ctx, 'index.html'); await reset(p); await p.evaluate(() => PARCO.setSession({ vendorUser: 'lena.marsh@example.com' })); await p.reload(); await p.waitForTimeout(2200);
+  await p.click('aside nav a:has-text("Workflow")'); await p.waitForTimeout(400); await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(400);
+  const V = 'body'; await p.click('button:has-text("Service Invoice")'); await p.locator('.ux-drawer select').first().selectOption('SVC-INSP-03');
+  await p.click('.so-ref-chip'); await p.click('button:has-text("Verify reference")'); await p.waitForTimeout(300);
+  await p.fill('.ux-drawer input[placeholder="e.g. 250000"]', '300000'); await p.click('button:has-text("Upload invoice PDF")');
+  ok('F: service invoice shows amount with WHT and net payable', /300,000\.00 PKR/.test(await p.locator('.ux-drawer').innerText()));
+  const sid = await p.evaluate(() => { const d = PARCO.load(); const cr = d.clientRequests.find(c => c.id === 'PARCO-CR-000412'); const r = PARCO.createSubmission({ type: 'SERVICE', vendorId: 'V-1000236', actorName: 'Lena Marsh (Demo)', crId: cr.id, data: { crId: cr.id, serviceId: cr.serviceId, units: 2, uom: cr.uom, periodFrom: '2026-10-22', periodTo: '2026-10-28', evidence: ['r.pdf'], amount: 300000, currency: 'PKR', invoicePdf: 'Invoice-000412.pdf', atlDeclared: true, whtCode: 'WHT-S1' } }); return r.submission.id; });
+  await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 1); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
+  ok('F: Level 1 approval re-checks ATL with FBR', await p.evaluate(id => { const s = PARCO.byId(PARCO.load().submissions, id); return !!s.fbrAtl && s.history.some(x => /FBR ATL check/.test(x.what)); }, sid));
+  await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 2); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
+  const a = await h.open(ctx, 'admin.html'); await a.evaluate(() => PARCO.setSession({ parco: 'u-ayesha' })); await a.reload(); await a.waitForTimeout(2200);
+  await a.goto(a.url().split('?')[0] + '?prototype=1&screen=services&submission=' + sid); await a.waitForTimeout(2200);
+  ok('F: approval panel shows FBR check and amounts', await h.has(a, 'body', 'FBR ATL check') && await h.has(a, 'body', '300,000.00 PKR'));
+  await a.click('.sap-post button:has-text("Post to SAP")'); await a.waitForTimeout(500);
+  ok('F: one-click Post to SAP makes it ready for invoice', await a.evaluate(id => PARCO.byId(PARCO.load().submissions, id).status === 'READY_FOR_INVOICE', sid));
+  await a.close(); await p.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr });
