@@ -4,7 +4,7 @@
    implementation: emails are simulated, SAP postings are simulated, ATL checks are simulated. Integration points are
    the command functions below (decideOnboarding, decideApproval, createInvoice, sendReminder, ...). */
 (function () {
-  var KEY = 'waslhub.parco.v1', SEED_VERSION = 13, TODAY = '2026-10-29', TZ = 'Asia/Karachi';
+  var KEY = 'waslhub.parco.v1', SEED_VERSION = 14, TODAY = '2026-10-29', TZ = 'Asia/Karachi';
   var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function pad(n) { return String(n).padStart(2, '0'); }
   function fmtD(iso) { if (!iso) return '—'; var p = String(iso).slice(0, 10).split('-'); return p[2] + '-' + MON[+p[1] - 1] + '-' + p[0]; }
@@ -153,11 +153,12 @@
   var TAX_CODES = [{ code: 'S1', label: 'VAT 15%', rate: 0.15, co: ['2000'] }, { code: 'V5', label: 'VAT 5%', rate: 0.05, co: ['1000', '2000'] }, { code: 'V0', label: 'Zero-rated', rate: 0, co: ['1000', '2000'] }, { code: 'VE', label: 'Exempt', rate: 0, co: ['1000', '2000'] }];
   function taxCodes(all) { var d = load(); if (!d.taxCodes) d.taxCodes = TAX_CODES.map(function (t) { return { code: t.code, label: t.label, rate: t.rate, co: t.co.slice(), active: true, source: 'SAP' }; }); return d.taxCodes.filter(function (t) { return all || t.active; }); }
   var db = null, listeners = [];
-  function load() { if (db) return db; try { var raw = localStorage.getItem(KEY); db = raw ? JSON.parse(raw) : null; } catch (e) { db = null; } if (!db || db.seedVersion !== SEED_VERSION) { db = seed(); if (!db.sapPos) { db.sapPos = []; db.vendors.forEach(function (v) { if (v.status === 'ACTIVE') seedPos(v); }); } persist(true); } return db; }
+  function load() { if (db) return db; try { var raw = localStorage.getItem(KEY); db = raw ? JSON.parse(raw) : null; } catch (e) { db = null; } if (!db || db.seedVersion !== SEED_VERSION) { db = seed(); seedReg(); if (!db.sapPos) { db.sapPos = []; db.vendors.forEach(function (v) { if (v.status === 'ACTIVE') seedPos(v); }); } persist(true); } return db; }
   function persist(silent) { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { } if (!silent) listeners.forEach(function (f) { try { f(); } catch (e) { } }); }
   function on(f) { listeners.push(f); return function () { listeners = listeners.filter(function (x) { return x !== f; }); }; }
   try { window.addEventListener('storage', function (e) { if (e.key === KEY) { db = null; load(); listeners.forEach(function (f) { try { f(); } catch (x) { } }); } }); } catch (e) { }
-  function reset() { db = seed(); db.sapPos = []; db.vendors.forEach(function (v) { if (v.status === 'ACTIVE') seedPos(v); }); persist(); }
+  function seedReg() { var o40 = byId(db.onboarding, 'ONB-00040'); if (o40 && !o40.registration) { var rs = regSample('ONB-00040'); rs.salutation = 'Ms.'; rs.jobTitle = 'Operations Head'; rs.b0_name = 'Meezan Bank'; rs.b0_swift = 'MEZNPKKA'; rs.b0_iban = 'PK12MEZN0001234567890123'; rs.b0_account = '0001234567890123'; rs.b0_address = 'Meezan Bank, Shahrah-e-Faisal, Karachi'; rs.description = 'Mechanical equipment maintenance and instrument calibration for refinery and pipeline sites.'; o40.registration = { data: rs, step: 6, status: 'SUBMITTED', submittedAt: (o40.decision && o40.decision.at) || '2026-10-27T09:05:00Z', by: 'Nadia Hussain (Demo)', checks: {} }; } }
+  function reset() { db = seed(); seedReg(); db.sapPos = []; db.vendors.forEach(function (v) { if (v.status === 'ACTIVE') seedPos(v); }); persist(); }
   function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
   function staff(id) { return byId(load().staff, id) || { id: id, name: id || '—', roleLabel: '', mono: '??', email: '', title: '', dept: '', phone: '' }; }
   function actorName(a) { if (!a) return '—'; var s = byId(load().staff, a); return s ? s.name : a; }
@@ -200,7 +201,128 @@
   }
   function resendChannel(reqId, channel, actorId) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); if (o.decision || o.status !== 'AWAITING_RESPONSE') return fail('NOT_ACTIONABLE'); var now = nowIso(); o.channels[channel] = { sent: true, lastSentAt: now, delivery: channel === 'EMAIL' ? 'Simulated — demo mail (no real email sent)' : 'Link re-issued' }; o.events.push({ at: now, channel: channel, event: 'RESENT', actor: actorId }); log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: (channel === 'EMAIL' ? 'Email action resent' : 'Magic link re-issued') + ' for ' + o.id + ' (business status unchanged)', entityType: 'ONBOARDING', entityId: o.id, channel: channel, source: 'Admin' }); persist(); return { ok: true }; }
   function revokeOnboarding(reqId, actorId, reason) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); if (o.decision) return fail('ALREADY_DECIDED'); o.status = 'REVOKED'; o.revoked = { at: nowIso(), by: actorId, reason: reason || '' }; var v = vendor(o.vendorId); if (v) v.status = 'SAP_READY'; log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: 'Invitation revoked' + (reason ? ' · ' + reason : ''), entityType: 'ONBOARDING', entityId: o.id, channel: 'APP', source: 'Admin' }); persist(); return { ok: true }; }
-  function activateVendor(reqId, actorId) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); if (o.status !== 'VENDOR_ACCEPTED' && o.status !== 'CORRECTION_REQUESTED') return fail('NOT_ACCEPTED', { status: o.status }); var now = nowIso(); o.status = 'ACTIVE'; o.activatedAt = now; o.activatedBy = actorId; var v = vendor(o.vendorId); if (v) { v.status = 'ACTIVE'; v.activatedAt = now; v.users.forEach(function (u) { if (u.status !== 'Active') u.status = 'Active'; }); seedPos(v); } log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: 'PARCO review completed — vendor activated', entityType: 'VENDOR', entityId: o.vendorId, channel: 'APP', source: 'Admin' }); if (o.concernedPlan && v && !v.concerned.primary) assignConcernedPerson(v.id, o.concernedPlan, 'PRIMARY', actorId, 'PARCO contact person chosen at invitation'); persist(); return { ok: true }; }
+  /* ---------- supplier registration (7-step wizard, spec: "Waslhub Supplier Registration – Fields & Dropdowns Spec") ---------- */
+  var REG_C = {
+    PK: { name: 'Pakistan', dial: '+92', phoneEx: '3001234567', postal: /^\d{5}$/, cur: ['PKR - Pakistani Rupee', 'USD - US Dollar'],
+      cities: ['Bahawalpur', 'Faisalabad', 'Gujranwala', 'Gwadar', 'Hyderabad', 'Islamabad (Capital)', 'Karachi', 'Lahore', 'Multan', 'Peshawar', 'Port Qasim', 'Quetta', 'Rawalpindi', 'Sialkot', 'Sukkur'],
+      banks: ['Allied Bank', 'Bank AL Habib', 'Bank Alfalah', 'Faysal Bank', 'Habib Bank Limited (HBL)', 'MCB Bank', 'Meezan Bank', 'National Bank of Pakistan', 'Standard Chartered Pakistan', 'United Bank Limited (UBL)'],
+      org: ['Private Limited Company', 'Public Limited Company', 'Single Member Company (SMC)', 'Partnership / AOP', 'Sole Proprietorship', 'Foreign Company Branch'],
+      regQ: 'Is your company registered with the SECP (Securities & Exchange Commission of Pakistan)?', regNo: 'SECP Incorporation Number', regNoPh: 'Enter SECP Incorporation Number',
+      taxNo: 'NTN (FBR National Tax Number)', taxNoPh: 'e.g. 1234567-8', tax2: 'STRN (Sales Tax Registration Number)', tax2Ph: 'e.g. 3277876123456',
+      regDoc: 'SECP Certificate of Incorporation', taxDoc: 'FBR NTN Certificate', tax2Doc: 'STRN Certificate',
+      chamberQ: 'Are you a registered member of a Chamber of Commerce & Industry in Pakistan?', chamberDoc: 'Chamber of Commerce Certificate' },
+    SA: { name: 'Saudi Arabia', dial: '+966', phoneEx: '5012345678', postal: /^\d{5}$/, cur: ['SAR - Saudi Riyal'],
+      cities: ['Abha', 'Al Khobar', 'Al-Ahsa (Hofuf)', 'Al-Kharj', 'Al-Qatif', 'Al-Jubail', 'Buraidah', 'Dammam', 'Hail', 'Jeddah', 'Jizan', 'Khamis Mushait', 'Makkah (Mecca)', 'Medina', 'Riyadh (Capital)', 'Tabuk', 'Taif', 'Yanbu'],
+      banks: ['Al Rajhi Bank', 'Alinma Bank', 'Arab National Bank', 'Bank Albilad', 'Banque Saudi Fransi', 'Riyad Bank', 'Saudi Awwal Bank (SAB)', 'Saudi National Bank (SNB)'],
+      org: ['Limited Liability Company (LLC)', 'Joint Stock Company (JSC)', 'General Partnership', 'Limited Partnership', 'Foreign Company Branch', 'Sole Establishment'],
+      regQ: 'Is your company registered with the Ministry of Commerce in Saudi Arabia?', regNo: 'Commercial Registration Number', regNoPh: 'Enter Commercial Registration Number',
+      taxNo: 'ZATCA VAT Registration Number', taxNoPh: 'Enter ZATCA VAT Registration Number', tax2: null,
+      regDoc: 'Commercial Registration (CR) Certificate', taxDoc: 'ZATCA VAT Registration Certificate', tax2Doc: null,
+      chamberQ: 'Are you a registered member of the Chamber of Commerce in Saudi Arabia?', chamberDoc: 'Chamber Of Commerce Certificate' },
+    AE: { name: 'United Arab Emirates', dial: '+971', phoneEx: '501234567', postal: null, cur: ['AED - UAE Dirham', 'USD - US Dollar'],
+      cities: ['Abu Dhabi (Capital)', 'Ajman', 'Al Ain', 'Dubai', 'Fujairah', 'Ras Al Khaimah', 'Sharjah', 'Umm Al Quwain'],
+      banks: ['Abu Dhabi Commercial Bank', 'Dubai Islamic Bank', 'Emirates NBD', 'First Abu Dhabi Bank', 'Mashreq', 'RAKBANK'],
+      org: ['Limited Liability Company (LLC)', 'Free Zone Company (FZE / FZCO)', 'Public Joint Stock Company (PJSC)', 'Private Joint Stock Company', 'Foreign Company Branch', 'Sole Establishment'],
+      regQ: 'Is your company licensed by the Department of Economy (DED) in the UAE?', regNo: 'Trade Licence Number', regNoPh: 'Enter Trade Licence Number',
+      taxNo: 'FTA Tax Registration Number (TRN)', taxNoPh: 'e.g. 100123456700003', tax2: null,
+      regDoc: 'Trade Licence', taxDoc: 'FTA VAT Registration Certificate', tax2Doc: null,
+      chamberQ: 'Are you a registered member of a Chamber of Commerce in the UAE?', chamberDoc: 'Chamber Of Commerce Certificate' }
+  };
+  var REG_OPT = {
+    supplierType: ['Goods', 'Services', 'Both'], salutation: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
+    turnover: ['Less than 10M', '10M - 50M', '50M - 250M', '250M - 1B', '1B+'],
+    employees: ['1 - 10 employees', '11 - 50 employees', '51 - 200 employees', '201 - 500 employees', '500+ employees'],
+    categories: ['Manufacturing & Production', 'Construction & Engineering', 'Energy & Utilities', 'IT & Technology', 'Professional Services', 'Healthcare', 'Transportation & Logistics', 'Retail & Distribution', 'Hospitality', 'Agriculture', 'Telecommunications', 'Education']
+  };
+  var REG_STEPS = [['company', 'Company Details', "Provide your company's legal and tax registration information"], ['contact', 'Primary Contact', 'Main point of contact for communications and notifications'], ['address', 'Address', 'Registered business address'], ['bank', 'Bank Account', 'Where PARCO pays your invoices. Add more than one account if needed.'], ['products', 'Products and Services', 'What your company supplies and at what scale'], ['compliance', 'Compliance & Documents', 'Certifications, signed agreements and country documents'], ['review', 'Review', 'Please review all information before submitting. Click Edit to make changes.']];
+  function regCountry(code) { return REG_C[code] || REG_C.PK; }
+  function regSchema(data) {
+    data = data || {}; var c = regCountry(data.country), F = function (k, l, t, req, o) { return Object.assign({ k: k, l: l, t: t, req: !!req }, o || {}); };
+    var co = [F('companyName', 'Company Name', 'text', 1, { ph: 'Enter legal company name' }),
+      F('country', 'Country', 'select', 1, { opts: Object.keys(REG_C).map(function (k) { return [k, REG_C[k].name]; }), help: 'Determines country-specific dynamic registration requirements' }),
+      F('supplierType', 'Supplier Type', 'select', 1, { opts: REG_OPT.supplierType }),
+      F('website', 'Corporate Website', 'text', 0, { ph: 'https://example.com' }),
+      F('financeEmail', 'Vendor Finance Email', 'email', 1, { ph: 'finance@company.com' }),
+      F('duns', 'D-U-N-S Number', 'text', 0, { ph: 'e.g., 123456789', help: 'Optional: Dun & Bradstreet unique 9-digit identifier' }),
+      F('authEmail', 'Authorised Person Email', 'email', 1, { ph: 'signatory@company.com' }),
+      F('orgType', 'Organization Type', 'select', 1, { opts: c.org, ph: 'Select Organization Type', dyn: 1 }),
+      F('registered', c.regQ, 'radio', 1, { opts: ['Yes', 'No'], full: 1, dyn: 1 }),
+      F('regNo', c.regNo, 'text', data.registered !== 'No', { ph: c.regNoPh, dyn: 1, hide: data.registered === 'No' }),
+      F('taxNo', c.taxNo, 'text', 1, { ph: c.taxNoPh, dyn: 1 })];
+    if (c.tax2) co.push(F('tax2No', c.tax2, 'text', 1, { ph: c.tax2Ph, dyn: 1 }));
+    var ct = [F('salutation', 'Salutation', 'select', 0, { opts: REG_OPT.salutation }), F('firstName', 'First Name', 'text', 1, { ph: 'Enter first name' }), F('middleName', 'Middle Name', 'text', 0, { ph: 'Enter middle name' }), F('lastName', 'Last Name', 'text', 1, { ph: 'Enter last name' }), F('jobTitle', 'Job Title', 'text', 1, { ph: 'e.g., Chief Financial Officer' }), F('email', 'Email', 'email', 1, { ph: 'contact@company.com' }), F('phone', 'Phone Number', 'phone', 1, { dial: c.dial, ph: c.phoneEx }), F('mobile', 'Mobile Number', 'phone', 0, { dial: c.dial, ph: c.phoneEx })];
+    var ad = [F('addrLabel', 'Address', 'text', 1, { ph: 'e.g., Head Office, Main Branch' }), F('addr1', 'Address Line 1', 'text', 1, { ph: 'Street address, building number' }), F('addr2', 'Address Line 2', 'text', 0, { ph: 'Apartment, suite, floor (optional)' }), F('region', 'Region / State', 'text', 0, { ph: 'Province, state, or region' }), F('postal', 'Postal Code', 'text', 0, { ph: c.postal ? '5 digits' : 'Optional' }), F('city', 'City', 'select', 1, { opts: c.cities, dyn: 1 })];
+    var bk = [], n = Math.max(1, +data.bankN || 1);
+    for (var i = 0; i < n; i++) { var p = 'b' + i + '_', bc = regCountry(data[p + 'country'] || data.country);
+      bk.push(F(p + 'head', 'Bank Account ' + (i + 1), 'head', 0, { rm: i > 0, idx: i }));
+      bk.push(F(p + 'country', 'Bank Country', 'select', 1, { opts: Object.keys(REG_C).map(function (k) { return [k, REG_C[k].name]; }) }), F(p + 'name', 'Bank Name', 'select', 1, { opts: data[p + 'country'] ? bc.banks : [], ph: data[p + 'country'] ? 'Select bank' : 'Choose a bank country first' }), F(p + 'title', 'Account Title', 'text', 1, { ph: 'Account holder name' }), F(p + 'swift', 'Bank Swift Code', 'text', 1, { ph: 'Enter Bank Swift Code' }), F(p + 'address', 'Bank Address', 'area', 1, { ph: 'Full bank branch address' }), F(p + 'iban', 'IBAN', 'text', 1, { ph: 'Enter IBAN' }), F(p + 'account', 'Account Number', 'text', 1, { ph: 'Enter Account Number' }), F(p + 'currency', 'Currency', 'select', 1, { opts: bc.cur, dyn: 1 }), F(p + 'cert', 'Bank Certificate', 'file', 1, { full: 1 })); }
+    bk.push(F('addBank', 'Add another bank account', 'add', 0));
+    var pr = [F('turnover', 'Annual Turnover Range', 'select', 1, { opts: REG_OPT.turnover }), F('employees', 'Number of Employees', 'select', 1, { opts: REG_OPT.employees }), F('years', 'Years in Business', 'num', 1, { ph: 'Number of years' }), F('prodCurrency', 'Currency', 'select', 1, { opts: c.cur, dyn: 1 }), F('description', 'Description', 'area', 1, { ph: 'Brief description of your products and services' }), F('categories', 'Business Categories (max 3)', 'checks', 1, { opts: REG_OPT.categories, max: 3, help: 'Select up to 3' })];
+    var cp = [F('h_cert', 'Additional Certifications', 'head', 0), F('iso', 'ISO Certified', 'radio', 1, { opts: ['Yes', 'No'] }), F('isoReason', 'Reason for not having ISO Certification', 'area', data.iso === 'No', { ph: 'Provide a reason for not having ISO certification', hide: data.iso !== 'No' }),
+      F('h_nda', 'Non-Disclosure Agreement (NDA)', 'head', 0, { tpl: 'NDA' }), F('nda', 'Upload Signed NDA', 'file', 1, { full: 1 }),
+      F('h_coc', 'Supplier Code of Conduct', 'head', 0, { tpl: 'COC' }), F('coc', 'Upload Signed Code of Conduct', 'file', 1, { full: 1 }),
+      F('h_country', c.name + ' documents', 'head', 0), F('regDoc', 'Upload ' + c.regDoc, 'file', data.registered !== 'No', { full: 1, dyn: 1, hide: data.registered === 'No' }), F('taxDoc', 'Upload ' + c.taxDoc, 'file', 1, { full: 1, dyn: 1 })];
+    if (c.tax2Doc) cp.push(F('tax2Doc', 'Upload ' + c.tax2Doc, 'file', 1, { full: 1, dyn: 1 }));
+    cp.push(F('chamber', c.chamberQ, 'radio', 1, { opts: ['Yes', 'No'], full: 1, dyn: 1 }), F('chamberDoc', c.chamberDoc, 'file', data.chamber === 'Yes', { full: 1, dyn: 1, hide: data.chamber !== 'Yes' }));
+    var all = [co, ct, ad, bk, pr, cp, []];
+    return REG_STEPS.map(function (s, i) { return { key: s[0], title: s[1], sub: s[2], fields: all[i].filter(function (f) { return !f.hide; }) }; });
+  }
+  function regErrors(data, stepIdx) {
+    var steps = regSchema(data), out = {}, c = regCountry(data.country), em = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    (stepIdx == null ? steps : [steps[stepIdx]]).forEach(function (s) { s.fields.forEach(function (f) {
+      if (f.t === 'head' || f.t === 'add') return; var v = data[f.k], empty = v == null || v === '' || (Array.isArray(v) && !v.length);
+      if (f.req && empty) { out[f.k] = f.t === 'file' ? 'Upload this document' : (f.t === 'checks' ? 'Select at least one category' : 'Required'); return; }
+      if (empty) return;
+      if (f.t === 'email' && !em.test(v)) out[f.k] = 'Enter a valid email address';
+      if (f.k === 'duns' && !/^\d{9}$/.test(v)) out[f.k] = 'D-U-N-S is 9 digits';
+      if (f.k === 'postal' && c.postal && !c.postal.test(v)) out[f.k] = 'Postal code is 5 digits';
+      if (f.k === 'website' && !/^https?:\/\/\S+\.\S+/.test(v)) out[f.k] = 'Start with https://';
+      if (f.t === 'phone' && !/^\d{7,12}$/.test(String(v).replace(/\s/g, ''))) out[f.k] = 'Digits only, without the country code';
+      if (f.t === 'num' && !(+v >= 0)) out[f.k] = 'Enter a number';
+      if (f.t === 'checks' && v.length > (f.max || 99)) out[f.k] = 'Select up to ' + f.max;
+    }); });
+    return out;
+  }
+  function regDefaults(reqId) {
+    var o = byId(load().onboarding, reqId); if (!o) return {}; var v = vendor(o.vendorId) || {}; var nm = String(o.contact || '').replace(/\s*\(Demo\)\s*/, '').split(' ');
+    var caps = o.capabilities || []; var addr = String(v.address || '').split(','); var ok = function (x) { return x && !/missing/i.test(x) ? x : ''; };
+    return { country: 'PK', companyName: v.legal || v.name || '', supplierType: caps.length > 1 ? 'Both' : (caps[0] === 'SUPPLY' ? 'Goods' : 'Services'), financeEmail: '', authEmail: o.invitedEmail || '', taxNo: ok(v.ntn), tax2No: ok(v.strn),
+      firstName: nm[0] || '', lastName: nm.slice(1).join(' '), email: o.invitedEmail || '', phone: String((v.contact || {}).phone || '').replace(/^\+92\s*/, '').replace(/\D/g, ''),
+      addrLabel: 'Head Office', addr1: ok((addr[0] || '').trim()), addr2: '', region: '', city: (REG_C.PK.cities.filter(function (x) { return String(v.address || '').indexOf(x.split(' ')[0]) >= 0; })[0] || ''),
+      bankN: 1, b0_country: 'PK', b0_currency: 'PKR - Pakistani Rupee', prodCurrency: 'PKR - Pakistani Rupee', categories: [], _prefilled: true };
+  }
+  function regSample(reqId) {
+    var d = regDefaults(reqId), s = String(reqId || '').replace(/\D/g, '').slice(-3) || '001';
+    return Object.assign(d, { website: 'https://example.com', financeEmail: 'finance@example.com', orgType: 'Private Limited Company', registered: 'Yes', regNo: '0' + s + '4567', taxNo: d.taxNo || '1234567-8', tax2No: d.tax2No || '3277876123456', salutation: 'Ms.', jobTitle: 'General Manager', phone: d.phone || '2134567890', addr1: d.addr1 || 'Plot 12, Korangi Industrial Area', region: 'Sindh', postal: '74900', city: d.city || 'Karachi',
+      b0_name: 'Habib Bank Limited (HBL)', b0_title: d.companyName, b0_swift: 'HABBPKKA', b0_address: 'HBL Korangi Branch, Karachi', b0_iban: 'PK36HABB0012345678901234', b0_account: '0012345678901234', b0_cert: 'Bank-certificate.pdf',
+      turnover: '50M - 250M', employees: '51 - 200 employees', years: '12', description: 'Industrial maintenance, inspection and supply of spare parts for oil and gas facilities.', categories: ['Energy & Utilities', 'Construction & Engineering'],
+      iso: 'Yes', nda: 'Signed-NDA.pdf', coc: 'Signed-Code-of-Conduct.pdf', regDoc: 'SECP-Incorporation-Certificate.pdf', taxDoc: 'FBR-NTN-Certificate.pdf', tax2Doc: 'STRN-Certificate.pdf', chamber: 'Yes', chamberDoc: 'Chamber-Certificate.pdf' });
+  }
+  function regDocList(o) {
+    var r = o && o.registration; if (!r) return []; var data = r.data, c = regCountry(data.country), chk = r.checks || {}, out = [];
+    var add = function (key, label, fieldNo, req, match) { var file = data[key]; if (!file && !req) return; out.push({ key: key, label: label, field: fieldNo, req: req, file: file || '—', match: match || '', verified: !!(chk[key] && chk[key].ok), by: chk[key] && chk[key].by, at: chk[key] && chk[key].at }); };
+    for (var i = 0; i < Math.max(1, +data.bankN || 1); i++) add('b' + i + '_cert', 'Bank Certificate' + (i ? ' (account ' + (i + 1) + ')' : ''), '4.9', true, 'Account title ' + (data['b' + i + '_title'] || '—') + ' · IBAN ' + (data['b' + i + '_iban'] || '—'));
+    add('nda', 'Signed NDA', '6.3', true); add('coc', 'Signed Code of Conduct', '6.4', true);
+    if (data.registered !== 'No') add('regDoc', c.regDoc, '6.5', true, 'Matches ' + c.regNo + ' ' + (data.regNo || '—'));
+    add('taxDoc', c.taxDoc, '6.6', true, 'Matches ' + c.taxNo + ' ' + (data.taxNo || '—'));
+    if (c.tax2Doc) add('tax2Doc', c.tax2Doc, '6.6', true, 'Matches STRN ' + (data.tax2No || '—'));
+    if (data.chamber === 'Yes') add('chamberDoc', c.chamberDoc, '6.8', true, 'Member');
+    return out;
+  }
+  function saveRegistration(reqId, data, step, actor) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); o.registration = Object.assign({}, o.registration || {}, { data: data, step: step || 0, savedAt: nowIso(), status: (o.registration && o.registration.status === 'SUBMITTED' && o.status !== 'CORRECTION_REQUESTED') ? 'SUBMITTED' : 'DRAFT', by: actor }); persist(); return { ok: true }; }
+  function submitRegistration(reqId, data, actor) {
+    var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); var errs = regErrors(data); if (Object.keys(errs).length) return fail('REG_INCOMPLETE', { errors: errs });
+    if (o.status !== 'AWAITING_RESPONSE' && o.status !== 'CORRECTION_REQUESTED') return fail('NOT_ACTIONABLE');
+    var now = nowIso(); o.registration = { data: data, step: 6, savedAt: now, submittedAt: now, status: 'SUBMITTED', by: actor, checks: {} };
+    if (o.status === 'AWAITING_RESPONSE') { persist(); var r = decideOnboarding(o.id, o.version, 'ACCEPT', 'PORTAL', actor, 'Registration submitted'); return r; }
+    o.status = 'VENDOR_ACCEPTED'; o.correction = Object.assign({}, o.correction || {}, { resolvedAt: now }); o.events.push({ at: now, channel: 'PORTAL', event: 'RESUBMITTED', actor: actor }); var v = vendor(o.vendorId); if (v) v.status = 'VENDOR_ACCEPTED';
+    log({ actorType: 'VENDOR', actor: actor, vendorId: o.vendorId, action: 'Registration corrected and resubmitted', entityType: 'ONBOARDING', entityId: o.id, channel: 'PORTAL', source: 'Registration' }); persist(); return { ok: true, request: o };
+  }
+  function verifyRegDoc(reqId, key, actorId, ok) { var o = byId(load().onboarding, reqId); if (!o || !o.registration) return fail('NOT_FOUND'); o.registration.checks = o.registration.checks || {}; o.registration.checks[key] = { ok: ok !== false, by: actorId, at: nowIso() }; var doc = regDocList(o).filter(function (x) { return x.key === key; })[0]; log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: (ok === false ? 'Verification removed: ' : 'Document verified: ') + (doc ? doc.label : key), entityType: 'ONBOARDING', entityId: o.id, channel: 'APP', source: 'Registration review' }); persist(); return { ok: true }; }
+  function regDocPdf(reqId, key) { var o = byId(load().onboarding, reqId); var doc = regDocList(o).filter(function (x) { return x.key === key; })[0] || { label: key, file: key }; var data = (o.registration || {}).data || {};
+    return makePdf([{ t: doc.label, s: 18, b: true }, { t: 'File: ' + doc.file, s: 10 }, { t: 'Company: ' + (data.companyName || '') + ' · ' + regCountry(data.country).name, s: 10 }, { t: doc.match || '', s: 10 }, { gap: 14 }, { rule: true }, { t: 'Demo document - uploaded during supplier registration ' + o.id + '. In production this is the vendor\'s original file.', s: 9, c: '0.36 0.39 0.45' }]); }
+  function regTemplatePdf(which, company) { var nda = which === 'NDA'; return makePdf([{ t: nda ? 'Non-Disclosure Agreement' : 'Supplier Code of Conduct', s: 18, b: true }, { t: 'PARCO - Pakistan · template for ' + (company || 'the supplier'), s: 10 }, { gap: 10 }].concat((nda ? ['1. Confidential information covers all commercial, technical and pricing data shared by PARCO.', '2. The supplier uses it only to deliver PARCO purchase orders and services.', '3. Obligations survive 5 years after the relationship ends.', '4. Sign, scan and upload this page in step 6 of the registration.'] : ['1. Act with integrity: no bribery, gifts or conflicts of interest.', '2. Follow Pakistani labour, safety (HSE) and environmental law on PARCO sites.', '3. Protect PARCO data and report incidents within 24 hours.', '4. Sign, scan and upload this page in step 6 of the registration.']).map(function (t) { return { t: t, s: 11 }; })).concat([{ gap: 30 }, { t: 'Signature: ____________________     Name: ____________________     Date: ____________', s: 10 }])); }
+  function activateVendor(reqId, actorId) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); if (o.status !== 'VENDOR_ACCEPTED' && o.status !== 'CORRECTION_REQUESTED') return fail('NOT_ACCEPTED', { status: o.status }); if (o.registration && o.registration.status === 'SUBMITTED' && regDocList(o).some(function (x) { return x.req && !x.verified; })) return fail('DOCS_NOT_VERIFIED'); var now = nowIso(); o.status = 'ACTIVE'; o.activatedAt = now; o.activatedBy = actorId; var v = vendor(o.vendorId); if (v) { v.status = 'ACTIVE'; v.activatedAt = now; if (o.registration && o.registration.data) v.registration = o.registration.data; v.users.forEach(function (u) { if (u.status !== 'Active') u.status = 'Active'; }); seedPos(v); } log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: 'PARCO review completed — vendor activated', entityType: 'VENDOR', entityId: o.vendorId, channel: 'APP', source: 'Admin' }); if (o.concernedPlan && v && !v.concerned.primary) assignConcernedPerson(v.id, o.concernedPlan, 'PRIMARY', actorId, 'PARCO contact person chosen at invitation'); persist(); return { ok: true }; }
   function requestCorrection(reqId, actorId, note) { var o = byId(load().onboarding, reqId); if (!o) return fail('NOT_FOUND'); if (o.status !== 'VENDOR_ACCEPTED') return fail('NOT_ACCEPTED'); o.status = 'CORRECTION_REQUESTED'; o.correction = { at: nowIso(), by: actorId, note: note || '' }; var v = vendor(o.vendorId); if (v) v.status = 'CORRECTION_REQUESTED'; log({ actorType: 'PARCO', actor: actorId, vendorId: o.vendorId, action: 'Correction requested during PARCO review' + (note ? ' · ' + note : ''), entityType: 'ONBOARDING', entityId: o.id, channel: 'APP', source: 'Admin' }); persist(); return { ok: true }; }
   function setTaxRule(vendorId, codes, def, actorId, reason) { var v = vendor(vendorId); if (!v) return fail('VENDOR_NOT_FOUND'); codes = (codes || []).filter(function (c) { return taxCodes(true).some(function (t) { return t.code === c; }); }); if (!codes.length) return fail('TAX_CODE_REQUIRED'); if (codes.indexOf(def) < 0) def = codes[0]; var before = v.taxRule ? v.taxRule.codes.join(', ') + ' (default ' + v.taxRule.def + ')' : 'all SAP tax codes'; v.taxRule = { codes: codes.slice(), def: def, by: actorId, at: nowIso(), reason: reason || '' }; log({ actorType: 'PARCO', actor: actorId, vendorId: v.id, action: 'Tax code rule set: ' + codes.join(', ') + ' (default ' + def + ') · was ' + before + (reason ? ' · ' + reason : ''), entityType: 'VENDOR', entityId: v.id, channel: 'APP', source: 'Admin' }); persist(); return { ok: true }; }
   function clearTaxRule(vendorId, actorId) { var v = vendor(vendorId); if (!v) return fail('VENDOR_NOT_FOUND'); v.taxRule = null; log({ actorType: 'PARCO', actor: actorId, vendorId: v.id, action: 'Tax code rule removed · all SAP tax codes allowed', entityType: 'VENDOR', entityId: v.id, channel: 'APP', source: 'Admin' }); persist(); return { ok: true }; }
@@ -400,7 +522,7 @@
   function capLabel(caps) { if (!caps || !caps.length) return 'Not set'; return caps.length === 2 ? 'Supply + Services' : CAP_LBL[caps[0]]; }
   function link(kind, id, channel) { var base = location.pathname.replace(/[^\/]*$/, ''); if (kind === 'onboarding') return base + 'index.html?onboarding=' + encodeURIComponent(id) + '&channel=' + (channel || 'portal'); if (kind === 'task') return base + 'admin.html?task=' + encodeURIComponent(id) + '&channel=email'; return base; }
 
-  window.PARCO = { whtCodes: whtCodes, saveWht: saveWht, removeWht: removeWht, whtFor: whtFor, checkReference: checkReference, PERMS: PERMS, roles: roles, role: role, can: can, setRolePerm: setRolePerm, saveRole: saveRole, removeRole: removeRole, saveUser: saveUser, userUse: userUse, posFor: posFor, invoicePo: invoicePo, rerouteOpen: rerouteOpen, taxCodes: taxCodes, saveTaxCode: saveTaxCode, removeTaxCode: removeTaxCode, taxCodeUse: taxCodeUse, removeService: removeService, serviceUse: serviceUse, approversFor: approversFor, setApprovers: setApprovers, isApprover: isApprover, setTaxRule: setTaxRule, clearTaxRule: clearTaxRule, KEY: KEY, TODAY: TODAY, load: load, session: session, setSession: setSession, accounts: accounts, persist: persist, on: on, reset: reset, nowIso: nowIso, fmtD: fmtD, fmtTs: fmtTs, addDays: addDays, diffDays: diffDays, dueBadge: dueBadge, byId: byId, staff: staff, actorName: actorName, vendor: vendor, service: service, log: log, money: money, whtView: whtView, tag: tag, LBL: LBL, ROLE_LBL: ROLE_LBL, capLabel: capLabel, link: link,
+  window.PARCO = { REG_C: REG_C, REG_STEPS: REG_STEPS, regCountry: regCountry, regSchema: regSchema, regErrors: regErrors, regDefaults: regDefaults, regSample: regSample, regDocList: regDocList, saveRegistration: saveRegistration, submitRegistration: submitRegistration, verifyRegDoc: verifyRegDoc, regDocPdf: regDocPdf, regTemplatePdf: regTemplatePdf, whtCodes: whtCodes, saveWht: saveWht, removeWht: removeWht, whtFor: whtFor, checkReference: checkReference, PERMS: PERMS, roles: roles, role: role, can: can, setRolePerm: setRolePerm, saveRole: saveRole, removeRole: removeRole, saveUser: saveUser, userUse: userUse, posFor: posFor, invoicePo: invoicePo, rerouteOpen: rerouteOpen, taxCodes: taxCodes, saveTaxCode: saveTaxCode, removeTaxCode: removeTaxCode, taxCodeUse: taxCodeUse, removeService: removeService, serviceUse: serviceUse, approversFor: approversFor, setApprovers: setApprovers, isApprover: isApprover, setTaxRule: setTaxRule, clearTaxRule: clearTaxRule, KEY: KEY, TODAY: TODAY, load: load, session: session, setSession: setSession, accounts: accounts, persist: persist, on: on, reset: reset, nowIso: nowIso, fmtD: fmtD, fmtTs: fmtTs, addDays: addDays, diffDays: diffDays, dueBadge: dueBadge, byId: byId, staff: staff, actorName: actorName, vendor: vendor, service: service, log: log, money: money, whtView: whtView, tag: tag, LBL: LBL, ROLE_LBL: ROLE_LBL, capLabel: capLabel, link: link,
     createOnboarding: createOnboarding, decideOnboarding: decideOnboarding, resendChannel: resendChannel, revokeOnboarding: revokeOnboarding, activateVendor: activateVendor, requestCorrection: requestCorrection, assignConcernedPerson: assignConcernedPerson, updateCapabilities: updateCapabilities,
     createSubmission: createSubmission, decideApproval: decideApproval, fbrCheckAtl: fbrCheckAtl, createClientRequest: createClientRequest, addServiceDraft: addServiceDraft, setServiceStatus: setServiceStatus, setInvoiceStatus: setInvoiceStatus, auditCsv: auditCsv, confirmSap: confirmSap, resubmit: resubmit, createInvoice: createInvoice, setAtl: setAtl, addContact: addContact, sendReminder: sendReminder, makePdf: makePdf, invoicePdf: invoicePdf, pdfUrl: pdfUrl, download: download };
 })();

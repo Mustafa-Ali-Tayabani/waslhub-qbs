@@ -34,8 +34,8 @@ async function adminOnboardingDetail(ctx, h) {
   h.ok('P: channel vendor-view links present', (await h.count(p, S + ' .ob-ch a:has-text("Vendor view")')) === 2 && (await h.count(p, S + ' .ob-track .ob-st')) === 4);
   await p.screenshot({ path: h.SHOTS + '/p-onboarding-detail.png' });
   await p.click(S + ' tbody tr:has-text("ONB-00040")'); await p.waitForTimeout(500);
-  h.ok('P: accepted request shows lock banner + review actions', await h.has(p, S, 'already accepted via Magic link') && (await h.count(p, S + ' .ux-dr-foot button:has-text("Activate vendor")')) === 1 && await h.has(p, S + ' .ux-dr-foot', 'Your review'));
-  await p.click(S + ' .ux-dr-foot button:has-text("Activate vendor")'); await p.waitForTimeout(600);
+  h.ok('P: accepted request shows lock banner + review actions', await h.has(p, S, 'already accepted via Magic link') && (await h.count(p, S + ' .ux-dr-foot button:has-text("Approve & activate")')) === 1 && await h.has(p, S + ' .ux-dr-foot', 'Your review'));
+  await p.click(S + ' .rgd button:has-text("Verify all")'); await p.waitForTimeout(300); await p.click(S + ' .ux-dr-foot button:has-text("Approve & activate")'); await p.waitForTimeout(600);
   h.ok('P: activation works and prompts concerned person', await h.has(p, S, 'Active') && await h.has(p, S, 'Not assigned yet'));
   await p.click(S + ' button:has-text("Assign / reassign Concerned Person")'); await p.waitForTimeout(300);
   await p.fill(S + ' input[placeholder="e.g. Initial assignment"]', 'Initial assignment after activation');
@@ -441,12 +441,12 @@ async function fullFlowNewVendor(ctx, h) {
   const onb = await a.evaluate(() => PARCO.load().onboarding[0].id);
   // 5. vendor accepts by magic link
   const v = await h.open(ctx, 'index.html', '?onboarding=' + onb + '&channel=portal'); const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
-  await v.locator(MG + ' button:has-text("check_box_outline_blank")').first().click(); await v.waitForTimeout(200); await v.click(MG + ' button:has-text("Accept onboarding")'); await v.waitForTimeout(600);
+  await v.click(MG + ' button:has-text("Fill sample data")'); await v.click(MG + ' .rg-st:has-text("Review")'); await v.click(MG + ' .rg-ack'); await v.click(MG + ' button:has-text("Submit registration")'); await v.waitForTimeout(600);
   ok('F: vendor accepted through the magic link', await v.evaluate(id => PARCO.byId(PARCO.load().onboarding, id).status, onb) === 'VENDOR_ACCEPTED');
   await v.close();
   // 6. PARCO activates
   await a.reload(); await a.waitForTimeout(2500); await goTo(a, 'Vendors', 'Onboarding'); await a.click('tbody tr:has-text("' + onb + '")'); await a.waitForTimeout(500);
-  await a.click('.ux-dr-foot button:has-text("Activate vendor")'); await a.waitForTimeout(500);
+  await a.click('.rgd button:has-text("Verify all")'); await a.waitForTimeout(300); await a.click('.ux-dr-foot button:has-text("Approve & activate")'); await a.waitForTimeout(500);
   ok('F: vendor activated with Concerned Person and its own approvers', await a.evaluate(() => { const x = PARCO.vendor('V-1000242'); return x.status === 'ACTIVE' && !!x.concerned.primary && x.approvers.SERVICE[2] === 'u-sana'; }));
   // 7. client request for the new service
   await goTo(a, 'Approvals', 'Services'); const SV = '[data-screen-label="08 Service Approvals"]';
@@ -628,11 +628,45 @@ async function serviceInvoiceSapFbr(ctx, h) {
   await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 1); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
   ok('F: Level 1 approval re-checks ATL with FBR', await p.evaluate(id => { const s = PARCO.byId(PARCO.load().submissions, id); return !!s.fbrAtl && s.history.some(x => /FBR ATL check/.test(x.what)); }, sid));
   await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 2); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
-  const a = await h.open(ctx, 'admin.html'); await a.evaluate(() => PARCO.setSession({ parco: 'u-ayesha' })); await a.reload(); await a.waitForTimeout(2200);
+  const a = await h.open(ctx, 'admin.html');
   await a.goto(a.url().split('?')[0] + '?prototype=1&screen=services&submission=' + sid); await a.waitForTimeout(2200);
   ok('F: approval panel shows FBR check and amounts', await h.has(a, 'body', 'FBR ATL check') && await h.has(a, 'body', '300,000.00 PKR'));
   await a.click('.sap-post button:has-text("Post to SAP")'); await a.waitForTimeout(500);
   ok('F: one-click Post to SAP makes it ready for invoice', await a.evaluate(id => PARCO.byId(PARCO.load().submissions, id).status === 'READY_FOR_INVOICE', sid));
   await a.close(); await p.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr });
+async function supplierRegistration(ctx, h) {
+  const ok = h.ok;
+  const v = await h.open(ctx, 'index.html'); await reset(v); await v.goto(v.url().split('?')[0] + '?prototype=1&onboarding=ONB-00041&channel=portal'); await v.waitForTimeout(2500);
+  const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
+  ok('R: registration wizard has 7 steps with progress', (await h.count(v, MG + ' .rg-st')) === 7 && await h.has(v, MG, 'Step 1 of 7'));
+  ok('R: fields prefilled from SAP', (await v.locator(MG + ' .rg-f input').first().inputValue()) === 'Coastal Civil Works (Demo)');
+  await v.click(MG + ' .rg-foot button:has-text("Next")'); await v.waitForTimeout(200);
+  ok('R: Next is blocked with inline errors on missing required fields', await h.has(v, MG, 'Step 1 of 7') && (await h.count(v, MG + ' .rg-err')) >= 2);
+  await v.locator(MG + ' .rg-f select').first().selectOption('SA'); await v.waitForTimeout(200);
+  ok('R: country drives dynamic fields (Saudi Arabia shows CR and ZATCA)', await h.has(v, MG, 'Commercial Registration Number') && await h.has(v, MG, 'ZATCA VAT Registration Number'));
+  await v.locator(MG + ' .rg-f select').first().selectOption('PK'); await v.waitForTimeout(200);
+  ok('R: Pakistan shows SECP, NTN and STRN', await h.has(v, MG, 'SECP Incorporation Number') && await h.has(v, MG, 'STRN (Sales Tax Registration Number)'));
+  await v.click(MG + ' button:has-text("Fill sample data")'); await v.click(MG + ' .rg-st:has-text("Bank Account")'); await v.click(MG + ' button:has-text("Add another bank account")'); await v.waitForTimeout(200);
+  ok('R: multiple bank accounts', await h.has(v, MG, 'Bank Account 2'));
+  await v.click(MG + ' button:has-text("Remove account")'); await v.click(MG + ' .rg-st:has-text("Products")');
+  for (const c of ['IT & Technology', 'Healthcare']) await v.click(MG + ' .rg-chk:has-text("' + c + '")');
+  ok('R: business categories capped at 3', (await h.count(v, MG + ' .rg-chk.on')) === 3);
+  await v.click(MG + ' .rg-st:has-text("Review")'); await v.click(MG + ' .rg-ack'); await v.click(MG + ' button:has-text("Submit registration")'); await v.waitForTimeout(600);
+  ok('R: submitting the registration accepts the invitation', await v.evaluate(() => { const o = PARCO.byId(PARCO.load().onboarding, 'ONB-00041'); return o.status === 'VENDOR_ACCEPTED' && o.registration.status === 'SUBMITTED'; }));
+  const a = await h.open(ctx, 'admin.html');
+  await goTo(a, 'Vendors', 'Onboarding'); await a.click('tbody tr:has-text("ONB-00041")'); await a.waitForTimeout(500);
+  ok('R: admin sees registration and document checklist', (await h.count(a, '.rgd-row')) >= 6 && await h.has(a, '.rgd', '0 of'));
+  await a.click('.ux-dr-foot button:has-text("Approve & activate")'); await a.waitForTimeout(300);
+  ok('R: activation blocked until documents are verified', await a.evaluate(() => PARCO.byId(PARCO.load().onboarding, 'ONB-00041').status) === 'VENDOR_ACCEPTED');
+  await a.click('.ux-dr-foot button:has-text("Send back for changes")'); await a.waitForTimeout(300); await a.fill('textarea', 'Bank certificate is unreadable, please upload again'); await a.click('button:has-text("Confirm")'); await a.waitForTimeout(400);
+  const st = await a.evaluate(() => PARCO.byId(PARCO.load().onboarding, 'ONB-00041').status);
+  await v.reload(); await v.waitForTimeout(2200);
+  ok('R: vendor can edit again after send back', st === 'CORRECTION_REQUESTED' && await h.has(v, MG, 'PARCO asked for changes') && await h.has(v, MG, 'Bank certificate is unreadable'), st);
+  await v.click(MG + ' .rg-st:has-text("Review")'); await v.click(MG + ' .rg-ack'); await v.click(MG + ' button:has-text("Submit registration")'); await v.waitForTimeout(500);
+  await a.reload(); await a.waitForTimeout(2500); await goTo(a, 'Vendors', 'Onboarding'); await a.click('tbody tr:has-text("ONB-00041")'); await a.waitForTimeout(500);
+  await a.click('.rgd button:has-text("Verify all")'); await a.waitForTimeout(300); await a.click('.ux-dr-foot button:has-text("Approve & activate")'); await a.waitForTimeout(500);
+  ok('R: resubmitted, verified and activated', await a.evaluate(() => PARCO.byId(PARCO.load().onboarding, 'ONB-00041').status) === 'ACTIVE');
+  await a.close(); await v.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration });

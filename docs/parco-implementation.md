@@ -120,3 +120,15 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 | Operational approval, SAP confirmation, invoice review, payment kept separate | ✅ |
 | Decisions persist across refresh and navigation | ✅ automated |
 | Simulated integrations never presented as real | ✅ labelled everywhere |
+
+## Supplier registration (7-step wizard)
+
+Built from "Waslhub Supplier Registration – Fields & Dropdowns Spec". The vendor's magic link (`index.html?onboarding=ID&channel=portal`) now opens the registration wizard: Company Details, Primary Contact, Address, Bank Account (several accounts), Products and Services, Compliance & Documents, Review. Progress bar ("Step X of 7", "% Complete"), clickable stepper, Back / Save Draft / Next, inline validation, Edit links on the Review page.
+
+- Field definitions, country rules and validation live in `parco-store.js` (`REG_C`, `regSchema`, `regErrors`), so both portals read the same definition.
+- Country-driven fields: Pakistan (SECP, NTN, STRN, FBR certificates, +92, PKR, Pakistani cities and banks), Saudi Arabia (CR, ZATCA, +966, SAR, 18 cities), UAE (Trade Licence, TRN, +971, AED).
+- Prefilled from the SAP vendor master; "Fill sample data (demo)" and "Use a sample file" exist for demos. Real file picking works (10 MB, PDF/DOC/DOCX/JPG/JPEG/PNG); only the file name is stored.
+- Submitting the registration accepts the invitation (`submitRegistration`). The email action can still accept without the form; admin then sees "No registration submitted".
+- Admin › Vendors › Onboarding › request: registration summary, document checklist with Preview and Verify (`verifyRegDoc`), "Approve & activate" is blocked until every required document is verified, "Send back for changes" reopens the wizard for the vendor, who resubmits.
+- Step 6 is named "Compliance & Documents" in both the stepper and the Review page (the spec used two names).
+- Test: `supplierRegistration` (suite 208 checks).
