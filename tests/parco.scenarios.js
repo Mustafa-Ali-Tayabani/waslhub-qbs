@@ -477,7 +477,7 @@ async function fullFlowNewVendor(ctx, h) {
   ok('F: Concerned Person who is an approver gets Approvals', await h.has(a, 'aside nav', 'Approvals'));
   await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:not(.dis):has-text("Accept")'); await a.waitForTimeout(500);
   await actAs(a, 'Sana Ahmed'); await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' button:has-text("All submissions")').catch(() => {}); await a.waitForTimeout(200); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:not(.dis):has-text("Accept")'); await a.waitForTimeout(500);
-  await actAs(a, 'Ayesha Khan'); await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' button:has-text("All submissions")').catch(() => {}); await a.waitForTimeout(200); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:has-text("Simulate SAP")'); await a.waitForTimeout(500);
+  await actAs(a, 'Ayesha Khan'); await goTo(a, 'Approvals', 'Services'); await a.click(SV + ' button:has-text("All submissions")').catch(() => {}); await a.waitForTimeout(200); await a.click(SV + ' tbody tr:has-text("' + sub.id + '")'); await a.waitForTimeout(500); await a.click(SV + ' .ux-dr-foot button:has-text("Post to SAP")'); await a.waitForTimeout(500);
   ok('F: approved by both levels and confirmed by SAP → ready for invoice', await a.evaluate(id => PARCO.byId(PARCO.load().submissions, id).status, sub.id) === 'READY_FOR_INVOICE');
   // 10. vendor sees the new tax rate on a standalone invoice
   const q = await h.open(ctx, 'index.html'); await q.evaluate(() => PARCO.setSession({ vendorUser: 'adnan.pqm@example.com' })); await q.reload(); await q.waitForTimeout(2500);
@@ -669,4 +669,18 @@ async function supplierRegistration(ctx, h) {
   ok('R: resubmitted, verified and activated', await a.evaluate(() => PARCO.byId(PARCO.load().onboarding, 'ONB-00041').status) === 'ACTIVE');
   await a.close(); await v.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration });
+async function poInvoiceApproval(ctx, h) {
+  const ok = h.ok;
+  const p = await h.open(ctx, 'index.html'); await reset(p);
+  const id = await p.evaluate(() => { const r = PARCO.createInvoice({ source: 'VENDOR', vendorId: 'V-1000236', actorName: 'Lena Marsh (Demo)', ref: 'IND-T-501', pdf: true, po: '4500012345', gross: 4410, currency: 'USD', taxCode: 'V5', atl: true, poKind: 'Material' }); return r.invoice.approvalId; });
+  ok('PI: a vendor invoice on a PO starts a two-level approval', await p.evaluate(i => { const d = PARCO.load(); const s = PARCO.byId(d.submissions, i); return s.type === 'INVOICE' && s.status === 'PENDING_L1' && PARCO.byId(d.invoices, 'IND-T-501').status === 'PENDING_APPROVAL'; }, id));
+  const a = await h.open(ctx, 'admin.html'); await actAs(a, 'Hassan Malik'); await goTo(a, 'Approvals', 'PO invoices'); const A = '[data-screen-label="08 PO Invoice Approvals"]';
+  ok('PI: PO invoice approvals screen lists it', await h.has(a, A, 'IND-T-501'));
+  await a.click(A + ' tbody tr:has-text("IND-T-501")'); await a.waitForTimeout(500); await a.click(A + ' .ux-dr-foot button:has-text("Accept")'); await a.waitForTimeout(500);
+  ok('PI: Level 1 approval runs the FBR ATL check', await a.evaluate(i => !!PARCO.byId(PARCO.load().submissions, i).fbrAtl, id));
+  await actAs(a, 'Sana Ahmed'); await goTo(a, 'Approvals', 'PO invoices'); await a.click(A + ' tbody tr:has-text("IND-T-501")'); await a.waitForTimeout(500); await a.click(A + ' .ux-dr-foot button:has-text("Accept")'); await a.waitForTimeout(500);
+  await a.click(A + ' .ux-dr-foot button:has-text("Post to SAP")'); await a.waitForTimeout(500);
+  ok('PI: after Level 2, Post to SAP posts the invoice', await a.evaluate(() => { const i = PARCO.byId(PARCO.load().invoices, 'IND-T-501'); return i.status === 'POSTED' && !!i.sapDoc; }));
+  await a.close(); await p.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval });
