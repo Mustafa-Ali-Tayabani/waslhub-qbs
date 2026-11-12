@@ -132,3 +132,11 @@ Built from "Waslhub Supplier Registration – Fields & Dropdowns Spec". The vend
 - Admin › Vendors › Onboarding › request: registration summary, document checklist with Preview and Verify (`verifyRegDoc`), "Approve & activate" is blocked until every required document is verified, "Send back for changes" reopens the wizard for the vendor, who resubmits.
 - Step 6 is named "Compliance & Documents" in both the stepper and the Review page (the spec used two names).
 - Test: `supplierRegistration` (suite 208 checks).
+
+## Approvals for PO invoices and onboarding
+
+- **PO invoices:** a vendor invoice on any PO creates a `PARCO-PIA-…` approval (type `INVOICE`) routed to the vendor's Level 1 and Level 2 approvers (supply approvers for material POs, service approvers for service POs). Level 1 re-checks ATL with FBR; after Level 2, "Post to SAP" posts the invoice. Screen: Approvals › PO invoices.
+- **Invitations:** an invitation prepared by a PARCO user goes to that user's invitation approvers (Setup › Users › Approvers for this user's vendor invitations; default Hassan Malik → Sana Ahmed) as a `PARCO-OBA-…` approval (stage `INVITE`). The vendor receives the link only after Level 2. The person who prepared it cannot approve it.
+- **Registrations:** when the vendor submits the registration, a stage `REGISTRATION` approval goes to the vendor's own approvers (chosen in invite step 3). Level 1 must verify every document before accepting; rejection sends the form back to the vendor with the reason; Level 2 approval activates the vendor. Screen: Approvals › Onboarding.
+- Config switches (store `config`): `inviteApproval`, `registrationApproval` (both on). `createOnboarding({ skipApproval: true })` exists for test setup.
+- Tests: `poInvoiceApproval`, updated `supplierRegistration`, `fullFlowNewVendor`, `adminOnboardingDetail` (suite 217 checks).
