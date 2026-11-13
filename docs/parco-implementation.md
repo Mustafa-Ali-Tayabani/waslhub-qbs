@@ -151,3 +151,8 @@ The vendor's registration is not prefilled from SAP and adds a "Business backgro
 ## Previewing the supplier's form
 
 Vendors › Onboarding has **Preview supplier form** (SAP vendor) and **Preview form for a new supplier**; the new-vendor invite step has the same link. They open `index.html?onboarding=PREVIEW&channel=portal` (or `PREVIEW-NEW`): the real registration wizard with a preview banner, validation working, and nothing saved. Change Country in step 1 to see the Saudi Arabia or UAE fields.
+
+## SAP-data onboarding and side panels
+
+- Invite wizard, SAP vendor selected: **How does this vendor complete onboarding?** — **Use SAP data** (default: details fetched from SAP, the vendor only reviews and accepts, no form) or **Vendor fills the registration form**. Stored as `onboarding.regMode` (`SAP` | `FORM`); new non-SAP vendors are always `FORM`. Previews: `?onboarding=PREVIEW-SAP` and `PREVIEW-NEW`. Test: `sapDataOnboarding`.
+- Side panels (both portals): while a panel is open the list beside it collapses to its first two columns with the open row highlighted, the page intro and filter chips hide, panel content stacks into one column below 720px, footer text is clamped to two lines, and Esc closes the panel.

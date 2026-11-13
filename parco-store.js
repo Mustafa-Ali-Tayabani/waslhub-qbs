@@ -202,7 +202,7 @@
     var o = { id: id, version: ver, vendorId: v.id, status: 'AWAITING_RESPONSE', capabilities: p.capabilities.slice(), serviceIds: (p.serviceIds || []).slice(), invitedEmail: p.email, contact: p.contactName, createdBy: p.actorId, sentAt: now, dueOn: due, expiresAt: addDays(due, 6), decision: null, activatedAt: null, activatedBy: null, channels: { PORTAL: { sent: chans.indexOf('PORTAL') >= 0, lastSentAt: now, delivery: 'Link issued' }, EMAIL: { sent: chans.indexOf('EMAIL') >= 0, lastSentAt: now, delivery: 'Simulated — demo mail (no real email sent)' } }, events: [], reminders: [], lastReminderAt: null, reminderCount: 0 };
     var needAppr = d.config.inviteApproval !== false && !p.skipApproval;
     if (needAppr) { o.status = 'INVITE_APPROVAL'; o.pendingChannels = chans.slice(); o.channels.PORTAL.sent = false; o.channels.EMAIL.sent = false; } else chans.forEach(function (c) { o.events.push({ at: now, channel: c, event: 'SENT', actor: p.actorId, delivery: c === 'EMAIL' ? 'Simulated' : 'Link issued' }); });
-    o.concernedPlan = p.concernedId || null;
+    o.concernedPlan = p.concernedId || null; o.regMode = v.source === 'NEW' ? 'FORM' : (p.regMode || 'SAP');
     if (p.approvers) { v.approvers = {}; ['SUPPLY', 'SERVICE'].forEach(function (k) { var a = p.approvers[k]; if (a && a[1] && a[2] && a[1] !== a[2]) v.approvers[k] = { 1: a[1], 2: a[2] }; }); }
     d.onboarding.unshift(o);
     v.status = needAppr ? 'INVITE_APPROVAL' : 'INVITED'; v.capabilities = o.capabilities.slice(); v.serviceIds = o.serviceIds.slice(); v.onboardingId = o.id; v.contact = { name: p.contactName, email: p.email, phone: v.contact ? v.contact.phone : '' };

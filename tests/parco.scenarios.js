@@ -433,7 +433,9 @@ async function fullFlowNewVendor(ctx, h) {
   // 4. invite a new vendor with services and vendor-specific Level 2
   await goTo(a, 'Vendors', 'Onboarding'); await a.click('button:has-text("Invite vendor")'); await a.waitForTimeout(300);
   const W = 'div[role=dialog]';
-  await a.click(W + ' .ux-vcard:has-text("V-1000242")'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
+  await a.click(W + ' .ux-vcard:has-text("V-1000242")'); await a.waitForTimeout(150);
+  ok('F: SAP vendor defaults to using SAP data', await h.has(a, W + ' .nv-opt.on', 'Use SAP data'));
+  await a.click(W + ' .nv-opt:has-text("Vendor fills the registration form")'); await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
   await a.click(W + ' button:has-text("Services —")'); await a.fill(W + ' .ux-svp input', 'drone'); await a.waitForTimeout(250); await a.click(W + ' .ux-svrow:has-text("Drone Inspection")'); await a.waitForTimeout(200);
   await a.click(W + ' button:has-text("Continue")'); await a.waitForTimeout(250);
   ok('F: people step shows services approvers prefilled with the default', await h.has(a, W, 'Approvers for this vendor') && await h.has(a, W, 'Who approves Service work') && (await a.locator(W + ' .va-ed select').nth(0).inputValue()) === 'u-farhan');
@@ -722,4 +724,17 @@ async function newVendorNotInSap(ctx, h) {
   ok('N: preview saves nothing', await h.has(pv, 'body', 'Preview only') && await pv.evaluate(() => !PARCO.load().onboarding.some(o => o.id.startsWith('PREVIEW'))));
   await pv.close(); await a.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap });
+async function sapDataOnboarding(ctx, h) {
+  const ok = h.ok;
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  const onb = await a.evaluate(() => PARCO.createOnboarding({ vendorId: 'V-1000239', capabilities: ['SUPPLY'], serviceIds: [], contactName: 'Zainab Mengal (Demo)', email: 'zainab.bls@example.com', actorId: 'u-ayesha', skipApproval: true }).request.id);
+  ok('S2: SAP vendors use SAP data by default', await a.evaluate(i => PARCO.byId(PARCO.load().onboarding, i).regMode, onb) === 'SAP');
+  const v = await h.open(ctx, 'index.html', '?onboarding=' + onb + '&channel=portal'); const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
+  ok('S2: vendor sees SAP data and no form', (await h.count(v, MG + ' .rg-st')) === 0 && await h.has(v, MG, 'no form to fill in') && await h.has(v, MG, 'Balochistan Logistics'));
+  await v.locator(MG + ' button:has-text("check_box_outline_blank")').first().click(); await v.click(MG + ' button:has-text("Accept onboarding")'); await v.waitForTimeout(600);
+  ok('S2: vendor accepts the SAP data', await v.evaluate(i => PARCO.byId(PARCO.load().onboarding, i).status, onb) === 'VENDOR_ACCEPTED');
+  const pv = await h.open(ctx, 'index.html', '?onboarding=PREVIEW-SAP&channel=portal');
+  ok('S2: SAP vendor preview shows the review page', (await h.count(pv, MG + ' .rg-st')) === 0 && await h.has(pv, MG, 'no form to fill in'));
+  await pv.close(); await v.close(); await a.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap, sapDataOnboarding });
