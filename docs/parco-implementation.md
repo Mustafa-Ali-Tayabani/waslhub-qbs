@@ -140,3 +140,9 @@ Built from "Waslhub Supplier Registration – Fields & Dropdowns Spec". The vend
 - **Registrations:** when the vendor submits the registration, a stage `REGISTRATION` approval goes to the vendor's own approvers (chosen in invite step 3). Level 1 must verify every document before accepting; rejection sends the form back to the vendor with the reason; Level 2 approval activates the vendor. Screen: Approvals › Onboarding.
 - Config switches (store `config`): `inviteApproval`, `registrationApproval` (both on). `createOnboarding({ skipApproval: true })` exists for test setup.
 - Tests: `poInvoiceApproval`, updated `supplierRegistration`, `fullFlowNewVendor`, `adminOnboardingDetail` (suite 217 checks).
+
+## Vendors that are not in SAP
+
+Invite vendor › step 1 has two sources: **From SAP vendor master** (unchanged) and **New vendor (not in SAP)**. For a new vendor PARCO enters company name, city, contact person, email, phone and NTN if known; the wizard flags a possible duplicate of an existing vendor (same name, email or NTN). On send, `createNewVendor` adds a `NEW-xxxxx` vendor with `source: 'NEW'`, and the invitation follows the normal approval flow.
+
+The vendor's registration is not prefilled from SAP and adds a "Business background and verification" block (year established, owners / directors with CNIC, two client references, litigation and blacklisting declarations) plus Company Profile, owners' CNIC copies and optional financial statements in Compliance & Documents. When Level 2 approves the registration, the vendor is activated and created in SAP (simulated): it gets an SAP vendor code (`sapCode`, e.g. V-1000301), and NTN, STRN, address and bank are taken from the registration. Test: `newVendorNotInSap` (suite 224 checks).

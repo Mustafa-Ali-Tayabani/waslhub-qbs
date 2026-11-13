@@ -321,7 +321,7 @@ module.exports = Object.assign(module.exports, { supplierSharedOnboardingStatus,
 async function quickSearch(ctx, h) {
   const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
   await a.keyboard.press('Control+k'); await a.waitForTimeout(400);
-  h.ok('P: Ctrl+K opens quick search with screens and actions', (await h.count(a, '.ux-cmd .ux-cmd-item')) >= 8 && await h.has(a, '.ux-cmd', 'Invite a vendor from SAP'));
+  h.ok('P: Ctrl+K opens quick search with screens and actions', (await h.count(a, '.ux-cmd .ux-cmd-item')) >= 8 && await h.has(a, '.ux-cmd', 'Invite a vendor (SAP or new)'));
   await a.keyboard.type('DSP-00081'); await a.waitForTimeout(300); await a.keyboard.press('Enter'); await a.waitForTimeout(900);
   h.ok('P: quick search opens the dispatch in Supply approvals', (await h.count(a, '.ux-cmd')) === 0 && await h.has(a, '[data-screen-label="08 Supply Approvals"]', 'SAP-prefilled data'));
   await a.close();
@@ -691,4 +691,29 @@ async function poInvoiceApproval(ctx, h) {
   ok('PI: after Level 2, Post to SAP posts the invoice', await a.evaluate(() => { const i = PARCO.byId(PARCO.load().invoices, 'IND-T-501'); return i.status === 'POSTED' && !!i.sapDoc; }));
   await a.close(); await p.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval });
+async function newVendorNotInSap(ctx, h) {
+  const ok = h.ok;
+  const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
+  await goTo(a, 'Vendors', 'Onboarding'); await a.click('button:has-text("Invite vendor")'); await a.waitForTimeout(300);
+  await a.click('button:has-text("New vendor (not in SAP)")'); await a.waitForTimeout(200);
+  await a.fill('input[placeholder="Registered company name"]', 'Karachi Industrial Materials'); await a.waitForTimeout(200);
+  ok('N: duplicate of an SAP vendor is flagged', await h.has(a, 'body', 'Possible duplicate') && await h.has(a, 'body', 'V-1000234'));
+  await a.fill('input[placeholder="Registered company name"]', 'Gwadar Pipeline Services'); await a.locator('select:has(option[value="Gwadar"])').selectOption('Gwadar');
+  await a.fill('input[placeholder="Who receives the invitation"]', 'Asif Baloch'); await a.fill('input[placeholder="name@company.com"]', 'asif@gwadar-ps.example.com'); await a.waitForTimeout(200);
+  await a.click('button:has-text("Continue")'); await a.waitForTimeout(300); await a.click('button:has-text("Services —")'); await a.click('.ux-svrow:has-text("SVC-INSP-03")');
+  for (let i = 0; i < 3; i++) { await a.click('button:has-text("Continue")'); await a.waitForTimeout(300); }
+  await a.click('button:has-text("Send invitation")'); await a.waitForTimeout(600);
+  const onb = await a.evaluate(() => PARCO.load().onboarding[0].id);
+  ok('N: new vendor created outside SAP and invitation sent for approval', await a.evaluate(i => { const o = PARCO.byId(PARCO.load().onboarding, i); const v = PARCO.vendor(o.vendorId); return v.source === 'NEW' && v.id.startsWith('NEW-') && o.status === 'INVITE_APPROVAL'; }, onb));
+  ok('N: invitation approved and sent', await approveOnb(a, onb) === 'AWAITING_RESPONSE');
+  const v = await h.open(ctx, 'index.html', '?onboarding=' + onb + '&channel=portal'); const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
+  ok('N: registration is not prefilled from SAP', !(await h.has(v, MG, 'prefilled from PARCO')) && (await v.locator(MG + ' .rg-f input').first().inputValue()) === 'Gwadar Pipeline Services');
+  await v.click(MG + ' .rg-st:has-text("Products")'); await v.waitForTimeout(200);
+  ok('N: new vendors answer business background and verification questions', await h.has(v, MG, 'Owners / directors') && await h.has(v, MG, 'Two major clients for reference') && await h.has(v, MG, 'blacklisted'));
+  await v.click(MG + ' button:has-text("Fill sample data")'); await v.click(MG + ' .rg-st:has-text("Review")'); await v.click(MG + ' .rg-ack'); await v.click(MG + ' button:has-text("Submit registration")'); await v.waitForTimeout(600);
+  await v.close(); await a.reload(); await a.waitForTimeout(2500);
+  ok('N: extra documents in the checklist', await a.evaluate(i => PARCO.regDocList(PARCO.byId(PARCO.load().onboarding, i)).some(x => x.key === 'profileDoc'), onb));
+  ok('N: approval activates the vendor and creates it in SAP', await approveOnb(a, onb) === 'ACTIVE' && await a.evaluate(i => /^V-1000\d+$/.test(PARCO.vendor(PARCO.byId(PARCO.load().onboarding, i).vendorId).sapCode || ''), onb));
+  await a.close();
+}
+module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap });
