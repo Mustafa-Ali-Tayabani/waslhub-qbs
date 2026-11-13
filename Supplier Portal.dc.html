@@ -286,6 +286,23 @@ main:has(.ux-drawer){padding-inline-end:calc(min(760px,56vw) + 28px)!important}
 .rg-ack{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid #D9DFE9;border-radius:12px;background:#FFFFFF;text-align:start;font:inherit;font-size:13px;cursor:pointer}.rg-ack .ms{font-size:22px;color:var(--brand,#2348D6)}
 .rg-decl{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid #E6EAF2}
 @media (max-width:900px){.rg-steps{grid-template-columns:repeat(4,minmax(0,1fr))}.rg-grid{grid-template-columns:1fr}}
+.pi-card{--c:var(--brand,#2348D6);--t:var(--brand-tint,#E7EEF8);background:#FFFFFF;border:1px solid #E6EAF2;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--sh-card);min-width:0;transition:border-color .15s,box-shadow .15s}
+.pi-card:hover,.pi-card:focus{border-color:var(--c);outline:none}
+.pi-card.s1{--c:#B45309;--t:#FEF3E2}.pi-card.s2{--c:#C2410C;--t:#FDEBE1}.pi-card.s3{--c:#B42318;--t:#FCE6E4}.pi-card.s4{--c:#7F1D1D;--t:#F9E1E1}
+.pi-hd{display:flex;align-items:center;gap:10px}
+.pi-ic{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:19px;background:var(--t);color:var(--c)}
+.pi-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25;text-transform:none}.pi-t b{font-size:15px;font-weight:800;white-space:nowrap;text-transform:none;letter-spacing:-.01em;color:#0E1726}.pi-t > span{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7C8799;white-space:nowrap}
+.pi-card:not(.s0) .pi-t > span{color:var(--c)}
+.pi-n{flex:none;height:22px;padding-inline:8px;border-radius:999px;background:#F1F4F9;font-size:11.5px;font-weight:700;color:#334155;display:inline-flex;align-items:center;white-space:nowrap}
+.pi-amts{display:flex;flex-direction:column;gap:6px}
+.pi-amt{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.pi-amt b{font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.pi-amt > .cur{font-size:11px;font-weight:700;color:#5E6B80;background:#F1F4F9;border-radius:6px;padding:2px 6px}
+.pi-card:not(.s0) .pi-amt b{color:var(--c)}
+.pi-none{display:flex;align-items:center;gap:6px;font-size:13px;color:#7C8799;min-height:26px}.pi-none .ms{font-size:18px;color:#A3ADBD}
+.pi-bar{height:6px;border-radius:99px;background:#EEF2F7;overflow:hidden;margin-top:auto}.pi-bar i{display:block;height:100%;border-radius:99px;background:var(--c)}
+.pi-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:-6px}.pi-share{font-size:11.5px;color:#7C8799;white-space:nowrap}
+.pi-card.empty{background:#FBFCFE;box-shadow:none}.pi-card.empty .pi-ic{background:#F1F4F9;color:#A3ADBD}.pi-card.empty .pi-t > span{color:#A3ADBD}
 .so-refs{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:#F8FAFD;border:1px dashed #D9DFE9}
 .so-refs .lbl{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7C8799}
 .so-refs .lbl .ms{font-size:15px}
@@ -1449,13 +1466,13 @@ tbody td:has(button),tbody td:has(.ux-chip),tbody td:has(a){overflow:visible}
 <sc-if value="{{ is.payments }}" hint-placeholder-val="{{ false }}">
   <section data-screen-label="06 Payment Insight" style="display:flex;flex-direction:column;gap:20px">
     <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-size:28px;font-weight:800;letter-spacing:-.02em">Payment Insight</h1><p style="margin:0;color:#5E6B80">Due dates, overdue amounts and payments made by SAP payment runs. Aging as of {{ sync.text }}.</p></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">
       <sc-for list="{{ pay.buckets }}" as="b" hint-placeholder-count="5">
-        <div data-tip="{{ b.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}" style="background:#FFFFFF;border:1px solid #E6EAF2;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;border-top:4px solid {{ b.bar }};box-shadow:var(--sh-card)">
-          <div style="display:flex;align-items:baseline;gap:6px"><b style="font-size:14px">{{ b.label }}</b><span style="font-size:12px;color:#5E6B80">{{ b.sub }}</span></div>
-          <sc-if value="{{ b.has }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:2px"><sc-for list="{{ b.amounts }}" as="a" hint-placeholder-count="1"><div style="display:flex;gap:6px;align-items:baseline;font-variant-numeric:tabular-nums"><b style="font-size:17px">{{ a.amt }}</b><span style="font-size:12px;font-weight:600;color:#5E6B80">{{ a.cur }}</span></div></sc-for></div></sc-if>
-          <sc-if value="{{ b.none }}" hint-placeholder-val="{{ false }}"><b style="font-size:17px;color:#A3ADBD">—</b></sc-if>
-          <span style="font-size:12px;color:#5E6B80;margin-top:auto">{{ b.n }}</span>
+        <div class="{{ b.cls }}" data-tip="{{ b.tip }}" onMouseEnter="{{ tip.show }}" onMouseLeave="{{ tip.hide }}" onFocus="{{ tip.show }}" onBlur="{{ tip.hide }}" tabindex="0">
+          <div class="pi-hd"><span class="pi-ic ms">{{ b.icon }}</span><div class="pi-t"><b>{{ b.label }}</b><span>{{ b.sub }}</span></div></div>
+          <sc-if value="{{ b.has }}" hint-placeholder-val="{{ true }}"><div class="pi-amts"><sc-for list="{{ b.amounts }}" as="a" hint-placeholder-count="1"><div class="pi-amt"><span class="cur">{{ a.cur }}</span><b>{{ a.amt }}</b></div></sc-for></div></sc-if>
+          <sc-if value="{{ b.none }}" hint-placeholder-val="{{ false }}"><div class="pi-none"><span class="ms">check_circle</span>Nothing in this range</div></sc-if>
+          <div class="pi-bar"><i style="width:{{ b.pct }}%"></i></div><div class="pi-ft"><span class="pi-share">{{ b.share }}</span><span class="pi-n">{{ b.n }}</span></div>
         </div>
       </sc-for>
     </div>
@@ -2062,7 +2079,7 @@ class Component extends DCLogic {
 
   payV(){const S=this.state;const rows=this.allRows().filter(r=>(r.type==='INV'||r.type==='CM')&&!['inv_returned','inv_rejected','inv_draft','inv_submitted'].includes(r.st));
     const outs=rows.filter(r=>r.st!=='inv_paid');const BT=['Unpaid invoices whose due date is today or later.','Overdue by 1 to 30 days past the due date.','Overdue by 31 to 60 days past the due date.','Overdue by 61 to 90 days past the due date.','Overdue by more than 90 days. Contact AP if a payment is missing.'];const B=[['Not due',r=>diffD(TODAY,r.due)<=0],['0–30 days',r=>{const x=diffD(TODAY,r.due);return x>0&&x<=30;}],['31–60 days',r=>{const x=diffD(TODAY,r.due);return x>30&&x<=60;}],['61–90 days',r=>{const x=diffD(TODAY,r.due);return x>60&&x<=90;}],['90+ days',r=>diffD(TODAY,r.due)>90]];
-    const buckets=B.map(([l,f],i)=>{const rr=outs.filter(r=>r.due&&f(r));const a=this.byCur(rr,r=>r.gross);return{tip:BT[i],label:l,sub:i===0?'':'overdue',n:rr.length+' invoice'+(rr.length===1?'':'s'),amounts:a,has:a.length>0,none:a.length===0,bar:['var(--brand,#0B4F9C)','#D97706','#C2410C','#B42318','#7F1D1D'][i]};});
+    const buckets=B.map(([l,f],i)=>{const rr=outs.filter(r=>r.due&&f(r));const a=this.byCur(rr,r=>r.gross);const tot=outs.filter(r=>r.due).length||1;return{tip:BT[i],label:l,sub:i===0?'Open, within terms':'Overdue',n:rr.length+' invoice'+(rr.length===1?'':'s'),amounts:a.map(x=>Object.assign({},x,{neg:String(x.amt).trim().startsWith('-')})),has:a.length>0,none:a.length===0,bar:['var(--brand,#0B4F9C)','#D97706','#C2410C','#B42318','#7F1D1D'][i],cls:'pi-card s'+i+(rr.length?'':' empty'),icon:['event_available','schedule','warning','error','priority_high'][i],pct:String(Math.round(100*rr.length/tot)),share:Math.round(100*rr.length/tot)+'% of open invoices'};});
     const ps=S.paySort,ts=S.table;const pv=(r,k)=>({ref:r.ref,date:r.date,due:r.due||'',gross:r.gross,wht:r.wht||0,cur:r.cur,payDate:r.payDate||'',st:STL[r.st]||r.st})[k];
     const tabAll=rows.filter(r=>S.payTab==='all'||(S.payTab==='paid'?r.st==='inv_paid':r.st!=='inv_paid'));const pf=this.fbar('pay',tabAll.map(r=>Object.assign({},r,{stL:STL[r.st]||String(r.st).replace(/^\w+_/,'')})),'invoices',r=>r.stL);this._payBar=pf.bar;const keep={};pf.shown.forEach(r=>keep[r.id]=1);
     const tabRows=tabAll.filter(r=>keep[r.id]).sort((a,b)=>{const x=pv(a,ps.k),y=pv(b,ps.k);return x<y?-ps.d:x>y?ps.d:0;});
