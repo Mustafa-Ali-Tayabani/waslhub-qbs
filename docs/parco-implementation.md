@@ -143,6 +143,11 @@ Built from "Waslhub Supplier Registration – Fields & Dropdowns Spec". The vend
 
 ## Vendors that are not in SAP
 
-Invite vendor › step 1 has two sources: **From SAP vendor master** (unchanged) and **New vendor (not in SAP)**. For a new vendor PARCO enters company name, city, contact person, email, phone and NTN if known; the wizard flags a possible duplicate of an existing vendor (same name, email or NTN). On send, `createNewVendor` adds a `NEW-xxxxx` vendor with `source: 'NEW'`, and the invitation follows the normal approval flow.
+Invite vendor › step 1 has two sources: **From SAP vendor master** (unchanged) and **New vendor (not in SAP)**. For a new vendor PARCO enters only the supplier name and email (the supplier provides everything else in the registration form); the wizard flags a possible duplicate of an existing vendor (same name, email or NTN). On send, `createNewVendor` adds a `NEW-xxxxx` vendor with `source: 'NEW'`, and the invitation follows the normal approval flow.
 
 The vendor's registration is not prefilled from SAP and adds a "Business background and verification" block (year established, owners / directors with CNIC, two client references, litigation and blacklisting declarations) plus Company Profile, owners' CNIC copies and optional financial statements in Compliance & Documents. When Level 2 approves the registration, the vendor is activated and created in SAP (simulated): it gets an SAP vendor code (`sapCode`, e.g. V-1000301), and NTN, STRN, address and bank are taken from the registration. Test: `newVendorNotInSap` (suite 224 checks).
+
+
+## Previewing the supplier's form
+
+Vendors › Onboarding has **Preview supplier form** (SAP vendor) and **Preview form for a new supplier**; the new-vendor invite step has the same link. They open `index.html?onboarding=PREVIEW&channel=portal` (or `PREVIEW-NEW`): the real registration wizard with a preview banner, validation working, and nothing saved. Change Country in step 1 to see the Saudi Arabia or UAE fields.

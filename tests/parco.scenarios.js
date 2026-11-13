@@ -696,10 +696,10 @@ async function newVendorNotInSap(ctx, h) {
   const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
   await goTo(a, 'Vendors', 'Onboarding'); await a.click('button:has-text("Invite vendor")'); await a.waitForTimeout(300);
   await a.click('button:has-text("New vendor (not in SAP)")'); await a.waitForTimeout(200);
-  await a.fill('input[placeholder="Registered company name"]', 'Karachi Industrial Materials'); await a.waitForTimeout(200);
+  await a.fill('input[placeholder="Company or supplier name"]', 'Karachi Industrial Materials'); await a.waitForTimeout(200);
   ok('N: duplicate of an SAP vendor is flagged', await h.has(a, 'body', 'Possible duplicate') && await h.has(a, 'body', 'V-1000234'));
-  await a.fill('input[placeholder="Registered company name"]', 'Gwadar Pipeline Services'); await a.locator('select:has(option[value="Gwadar"])').selectOption('Gwadar');
-  await a.fill('input[placeholder="Who receives the invitation"]', 'Asif Baloch'); await a.fill('input[placeholder="name@company.com"]', 'asif@gwadar-ps.example.com'); await a.waitForTimeout(200);
+  ok('N: new supplier invite asks only for name and email', (await h.count(a, '.ux-f3 input')) === 2);
+  await a.fill('input[placeholder="Company or supplier name"]', 'Gwadar Pipeline Services'); await a.fill('input[placeholder="name@company.com"]', 'asif@gwadar-ps.example.com'); await a.waitForTimeout(200);
   await a.click('button:has-text("Continue")'); await a.waitForTimeout(300); await a.click('button:has-text("Services —")'); await a.click('.ux-svrow:has-text("SVC-INSP-03")');
   for (let i = 0; i < 3; i++) { await a.click('button:has-text("Continue")'); await a.waitForTimeout(300); }
   await a.click('button:has-text("Send invitation")'); await a.waitForTimeout(600);
@@ -714,6 +714,12 @@ async function newVendorNotInSap(ctx, h) {
   await v.close(); await a.reload(); await a.waitForTimeout(2500);
   ok('N: extra documents in the checklist', await a.evaluate(i => PARCO.regDocList(PARCO.byId(PARCO.load().onboarding, i)).some(x => x.key === 'profileDoc'), onb));
   ok('N: approval activates the vendor and creates it in SAP', await approveOnb(a, onb) === 'ACTIVE' && await a.evaluate(i => /^V-1000\d+$/.test(PARCO.vendor(PARCO.byId(PARCO.load().onboarding, i).vendorId).sapCode || ''), onb));
-  await a.close();
+  const pv = await h.open(ctx, 'index.html', '?onboarding=PREVIEW-NEW&channel=portal'); const PM = '[data-screen-label="01 Onboarding · Magic Link"]';
+  ok('N: admin can preview the supplier form', await h.has(pv, PM, 'Preview of the supplier') && (await h.count(pv, PM + ' .rg-st')) === 7);
+  await pv.locator(PM + ' .rg-f select').first().selectOption('SA'); await pv.waitForTimeout(200);
+  ok('N: preview shows the Saudi fields', await h.has(pv, PM, 'ZATCA VAT Registration Number') && await h.has(pv, PM, 'Ministry of Commerce'));
+  await pv.click(PM + ' .rg-foot button:has-text("Save Draft")'); await pv.waitForTimeout(200);
+  ok('N: preview saves nothing', await h.has(pv, 'body', 'Preview only') && await pv.evaluate(() => !PARCO.load().onboarding.some(o => o.id.startsWith('PREVIEW'))));
+  await pv.close(); await a.close();
 }
 module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap });
