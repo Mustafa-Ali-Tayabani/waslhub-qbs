@@ -58,7 +58,7 @@ async function supplierRegression(ctx) {
 }
 async function adminRegression(ctx) {
   const p = await open(ctx, 'admin.html');
-  ok('A: admin loads PARCO', await has(p, 'aside', 'PARCO'));
+  ok('A: admin loads the Demo tenant', await has(p, 'aside', 'Demo'));
   await goTo(p, 'Setup', 'Monitoring');
   ok('A: monitoring queue', (await count(p, '[data-screen-label="08 Monitoring"] tbody tr')) >= 5);
   await goTo(p, 'Setup', 'SAP connection');
