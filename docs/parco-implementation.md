@@ -1,6 +1,6 @@
 # PARCO vendor onboarding, supply & services — implementation report
 
-Implemented inside the **two existing WaslHub portals** (Supplier Portal `public/index.html`, Tenant Admin `public/admin.html`) on 29-Oct-2026. No third portal was created. All PARCO-specific logic lives in one shared, persistent demo data layer, [parco-store.js](../parco-store.js), used by both apps.
+Implemented inside the **two existing WaslHub portals** (Supplier Portal `public/index.html`, Tenant Admin `public/admin.html`) on 29-Oct-2026. No third portal was created. All DEMO-specific logic lives in one shared, persistent demo data layer, [parco-store.js](../parco-store.js), used by both apps.
 
 ## 1. What is live and what is simulated
 
@@ -21,7 +21,7 @@ Implemented inside the **two existing WaslHub portals** (Supplier Portal `public
 
 ## 2. Demo identities and fixtures (all fictional, `@example.com`)
 
-Tenant **PARCO — Pakistan** (`PARCO-DEMO`, PKR, Asia/Karachi). Staff: Ayesha Khan (PARCO Admin), Bilal Raza (Finance), Hassan Malik (Approver 1), Sana Ahmed (Approver 2), Farhan Siddiqui (Concerned Person). Switch the acting user from the **Prototype** dock in the Admin portal; the Supplier Portal is signed in as Lena Marsh, Vendor Organization Admin of **Indus Technical Trading & Services (Demo)** `V-1000236` (capabilities: Supply + Services).
+Tenant **PARCO — Pakistan** (`DEMO-DEMO`, PKR, Asia/Karachi). Staff: Ayesha Khan (PARCO Admin), Bilal Raza (Finance), Hassan Malik (Approver 1), Sana Ahmed (Approver 2), Farhan Siddiqui (Concerned Person). Switch the acting user from the **Prototype** dock in the Admin portal; the Supplier Portal is signed in as Lena Marsh, Vendor Organization Admin of **Indus Technical Trading & Services (Demo)** `V-1000236` (capabilities: Supply + Services).
 
 | Vendor | Capability | Stage |
 |---|---|---|
@@ -31,7 +31,7 @@ Tenant **PARCO — Pakistan** (`PARCO-DEMO`, PKR, Asia/Karachi). Staff: Ayesha K
 | V-1000237 Coastal Civil Works (Demo) | Services (Civil) | ONB-00041 awaiting vendor response, both channels pending |
 | V-1000238 / V-1000239 | — | In SAP master, not invited (available in the Invite wizard) |
 
-Records: PARCO-DSP-00081 (pending Level 1, due tomorrow), PARCO-SRV-000112 (pending Level 2, due today), PARCO-SRV-000110 (fully approved, awaiting SES), client requests PARCO-CR-000411/412/413, invoices INV-DEMO-2026-091 (vendor, under review), 092 (uploaded on behalf by Farhan), 093 (scheduled, PDF).
+Records: DEMO-DSP-00081 (pending Level 1, due tomorrow), DEMO-SRV-000112 (pending Level 2, due today), DEMO-SRV-000110 (fully approved, awaiting SES), client requests DEMO-CR-000411/412/413, invoices INV-DEMO-2026-091 (vendor, under review), 092 (uploaded on behalf by Farhan), 093 (scheduled, PDF).
 
 ## 3. Mandatory shared-status demonstration
 
@@ -44,7 +44,7 @@ Records: PARCO-DSP-00081 (pending Level 1, due tomorrow), PARCO-SRV-000112 (pend
 
 ## 4. Roles as enforced in the prototype
 
-Screen access is enforced by role in `renderVals` (not just hidden in the nav): PARCO Admin (all), Finance (overview, onboarding, vendors, finance, payments, notifications, audit, monitoring, SAP connection), Approvers (overview, supply/service approvals, vendors, notifications, audit — own task history), Concerned Person (overview, assigned vendors, vendors scoped to assignments, notifications, audit scoped). Vendor users only ever see `V-1000236` data. Command-level checks: assigned approver only, same person cannot approve both levels, reject needs a reason, on-behalf upload needs assignment + reason + PDF, duplicate active invitation prevented, SAP-owned services read-only.
+Screen access is enforced by role in `renderVals` (not just hidden in the nav): Demo Admin (all), Finance (overview, onboarding, vendors, finance, payments, notifications, audit, monitoring, SAP connection), Approvers (overview, supply/service approvals, vendors, notifications, audit — own task history), Concerned Person (overview, assigned vendors, vendors scoped to assignments, notifications, audit scoped). Vendor users only ever see `V-1000236` data. Command-level checks: assigned approver only, same person cannot approve both levels, reject needs a reason, on-behalf upload needs assignment + reason + PDF, duplicate active invitation prevented, SAP-owned services read-only.
 
 ## 5. Integration contracts (replace the demo implementations here)
 
@@ -73,7 +73,7 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 - Demo data: 11 SAP vendors (7 not yet invited) and a 105-service SAP service master in 13 categories (`moreServices()` in parco-store.js, `SEED_VERSION` 6). The invite wizard's service step is a searchable picker (`svcPick()`): search, category chips with counts, selected chips, select all shown.
 - Invite wizard step 3: one PARCO contact person (dropdown with designation) stored as `concernedPlan` on the request and assigned as Concerned Person by `activateVendor()`; vendor contact name and email are typed; extra vendor users are added with an Operations / Finance toggle.
 - Master data (Tenant Admin › Setup): **Tax rates** (`d.taxCodes`, `saveTaxCode` / `removeTaxCode`; a code used in a vendor tax rule cannot be removed, set it inactive instead); **Services master data** add (active immediately, labelled PARCO until mapped in SAP) and remove (`removeService`, refused while a vendor or client request uses it); **Approval routing** (`config.approval[SUPPLY|SERVICE]`, `setApprovers`) with optional per-vendor routing (`vendor.approvers`, chosen in the invite wizard or the vendor profile). New submissions and resubmissions use `approversFor(vendorId, type)`; open tasks keep their approver. Any staff member assigned as an approver gets the Approvals screens.
-- Demo accounts include the users of every active vendor; the Supplier Portal follows the signed-in user's company (`VENDOR` is set from the session). Indus Technical keeps its hand-made SAP document fixtures; every other vendor gets simulated SAP purchase orders in the store (`d.sapPos`): two supply POs when it is activated (`seedPos`), and a service PO line for each client request (`servicePoLine`). SAP confirmation posts the received quantity onto the PO line (`postReceipt`); the vendor's invoice wizard creates a real store invoice for PARCO Finance and records the invoiced quantity (`invoicePo`).
+- Demo accounts include the users of every active vendor; the Supplier Portal follows the signed-in user's company (`VENDOR` is set from the session). Indus Technical keeps its hand-made SAP document fixtures; every other vendor gets simulated SAP purchase orders in the store (`d.sapPos`): two supply POs when it is activated (`seedPos`), and a service PO line for each client request (`servicePoLine`). SAP confirmation posts the received quantity onto the PO line (`postReceipt`); the vendor's invoice wizard creates a real store invoice for Demo Finance and records the invoiced quantity (`invoicePo`).
 - Users & RBAC: Setup › Users (`saveUser`, deactivation refused while the user is an approver, Concerned Person or has open approvals; the last admin is protected) and Setup › Roles & permissions (`d.roles`, `PARCO.PERMS`, `can(staffId, perm)`, custom roles). Every admin screen and action checks a permission; approving follows Approval routing, not a permission.
 - Service orders: the vendor creates a service order for any enabled service by entering the PARCO reference number; `checkReference()` refuses unknown numbers, another vendor's numbers, numbers for another service and already-used numbers (refusals are logged).
 - ATL and WHT: supply dispatches and service orders ask whether the vendor is on FBR's Active Taxpayer List; ATL service orders choose a WHT category from Setup › Tax rates & WHT (`d.whtCodes`, ATL and non-ATL rates, demo values); non-ATL uses the non-ATL rate. The submission stores `atlDeclared` and `wht`; approvers see a warning when the declaration differs from PARCO's ATL record; invoices for that PO carry the WHT rate.
@@ -82,7 +82,7 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 - Service orders per vendor appear in the vendor directory (column) and on the Concerned Person's assigned vendor cards.
 - Open approvals can be moved to the configured approvers (`rerouteOpen`): a button on Setup › Approval routing, and automatically when a vendor's own approvers change. A task is kept if the move would let one person approve both levels.
 - The vendor profile's Change capability / services form uses the same searchable service picker as the invite wizard.
-- Tax code rules per vendor: `vendor.taxRule = { codes, def, by, at, reason }`, set by PARCO Admin or Finance in the vendor profile (`setTaxRule` / `clearTaxRule`, both logged). The Supplier Portal invoice and standalone-invoice forms only offer the assigned codes and preselect the default; without a rule every SAP tax code for the company code is allowed.
+- Tax code rules per vendor: `vendor.taxRule = { codes, def, by, at, reason }`, set by Demo Admin or Finance in the vendor profile (`setTaxRule` / `clearTaxRule`, both logged). The Supplier Portal invoice and standalone-invoice forms only offer the assigned codes and preselect the default; without a rule every SAP tax code for the company code is allowed.
 - Approval panels for someone who is not the assigned approver show Accept / Reject locked (separation of duties) plus Send reminder and a demo shortcut to switch to the assigned approver.
 - Flow guide (Tenant Admin › Help): a 12-step tutorial of the whole flow, filterable by role, each step linking to its screen (`guideV()`).
 - Search and filters on every list: the shared admin table helper `tbl()` adds a search box, automatic status/type filter chips (a dropdown when there are more than six values) and a filtered count; the Supplier Portal uses `fbar()` / `lfx()` for payments, dispatches, service work and client requests.
@@ -99,7 +99,7 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 | Criterion | Result |
 |---|---|
 | Admin and Supplier remain the two portals; existing flows intact | ✅ regression scenarios pass |
-| Only PARCO Admin initiates onboarding | ✅ wizard only for PARCO Admin |
+| Only Demo Admin initiates onboarding | ✅ wizard only for Demo Admin |
 | SAP master data prefilled, read-only, *Missing in SAP* shown | ✅ |
 | Supply / Services / Both with multi-service selection | ✅ |
 | One shared status across email action and magic link; other channel locked after a decision | ✅ automated |
@@ -109,7 +109,7 @@ Listed in the store under `config.todo` and surfaced in the Overview subtitle: S
 | Concerned Person assigned after onboarding, scoped view, history | ✅ |
 | Supply submission against SAP PO with prefilled read-only fields, validations, evidence | ✅ |
 | Two distinct approvers, app or secure email, one status per task | ✅ automated |
-| Service submission requires PARCO Client Request Number; one/many services | ✅ |
+| Service submission requires Demo Client Request Number; one/many services | ✅ |
 | *Both* vendor runs supply and services concurrently | ✅ automated (DSP-00082 + SRV-000113) |
 | On-behalf invoice visible to vendor with real uploader attribution | ✅ |
 | Every action logged with actor/time/channel/source | ✅ |
@@ -135,8 +135,8 @@ Built from "Waslhub Supplier Registration – Fields & Dropdowns Spec". The vend
 
 ## Approvals for PO invoices and onboarding
 
-- **PO invoices:** a vendor invoice on any PO creates a `PARCO-PIA-…` approval (type `INVOICE`) routed to the vendor's Level 1 and Level 2 approvers (supply approvers for material POs, service approvers for service POs). Level 1 re-checks ATL with FBR; after Level 2, "Post to SAP" posts the invoice. Screen: Approvals › PO invoices.
-- **Invitations:** an invitation prepared by a PARCO user goes to that user's invitation approvers (Setup › Users › Approvers for this user's vendor invitations; default Hassan Malik → Sana Ahmed) as a `PARCO-OBA-…` approval (stage `INVITE`). The vendor receives the link only after Level 2. The person who prepared it cannot approve it.
+- **PO invoices:** a vendor invoice on any PO creates a `DEMO-PIA-…` approval (type `INVOICE`) routed to the vendor's Level 1 and Level 2 approvers (supply approvers for material POs, service approvers for service POs). Level 1 re-checks ATL with FBR; after Level 2, "Post to SAP" posts the invoice. Screen: Approvals › PO invoices.
+- **Invitations:** an invitation prepared by a PARCO user goes to that user's invitation approvers (Setup › Users › Approvers for this user's vendor invitations; default Hassan Malik → Sana Ahmed) as a `DEMO-OBA-…` approval (stage `INVITE`). The vendor receives the link only after Level 2. The person who prepared it cannot approve it.
 - **Registrations:** when the vendor submits the registration, a stage `REGISTRATION` approval goes to the vendor's own approvers (chosen in invite step 3). Level 1 must verify every document before accepting; rejection sends the form back to the vendor with the reason; Level 2 approval activates the vendor. Screen: Approvals › Onboarding.
 - Config switches (store `config`): `inviteApproval`, `registrationApproval` (both on). `createOnboarding({ skipApproval: true })` exists for test setup.
 - Tests: `poInvoiceApproval`, updated `supplierRegistration`, `fullFlowNewVendor`, `adminOnboardingDetail` (suite 217 checks).

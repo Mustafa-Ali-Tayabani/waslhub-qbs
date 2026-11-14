@@ -13,10 +13,10 @@ async function adminShellAndOverview(ctx, h) {
   await p.click(O + ' .ux-seg button:has-text("Overdue")'); await p.waitForTimeout(300);
   h.ok('P: queue filter Overdue', (await h.count(p, O + ' .ux-card:has-text("Everything due") .ux-row')) === 1); await p.click(O + ' .ux-seg button:has-text("All")'); await p.waitForTimeout(300);
   h.ok('P: needs-attention lists due items with reminders', (await h.count(p, O + ' button:has-text("Send reminder")')) >= 4);
-  h.ok('P: acting user shown', await h.has(p, 'header', 'Ayesha Khan') && await h.has(p, 'header', 'PARCO Admin'));
+  h.ok('P: acting user shown', await h.has(p, 'header', 'Ayesha Khan') && await h.has(p, 'header', 'Demo Admin'));
   await p.screenshot({ path: h.SHOTS + '/p-overview.png' });
   await actAs(p, 'Hassan Malik');
-  h.ok('P: approver dashboard is about his approvals', await h.has(p, O, 'Waiting for you') && await h.has(p, O + ' .ux-card:has-text("Your to-do")', 'PARCO-DSP-00081') && await h.has(p, O, 'Your decisions by channel'));
+  h.ok('P: approver dashboard is about his approvals', await h.has(p, O, 'Waiting for you') && await h.has(p, O + ' .ux-card:has-text("Your to-do")', 'DEMO-DSP-00081') && await h.has(p, O, 'Your decisions by channel'));
   h.ok('P: approver sign-in scopes the navigation', !(await h.has(p, 'aside nav', 'Finance')) && !(await h.has(p, 'aside nav', 'Setup')) && await h.has(p, 'aside nav', 'Approvals') && await h.has(p, 'header', 'Hassan Malik'));
   await goTo(p, 'Vendors');
   h.ok('P: approver has no Onboarding tab (single Vendors screen, no tab row)', !(await h.has(p, 'header', 'Onboarding')) && (await h.count(p, 'header [role=tablist]')) === 0 && (await h.count(p, '[data-screen-label="08 Vendors"]')) === 1);
@@ -132,22 +132,22 @@ async function supplyTwoPersonApproval(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
   await actAs(p, 'Hassan Malik'); await goTo(p, 'Approvals', 'Supply');
   const S = '[data-screen-label="08 Supply Approvals"]';
-  h.ok('P: supply approvals lists DSP-00081 pending L1', (await h.count(p, S + ' tbody tr:has-text("PARCO-DSP-00081")')) === 1);
-  await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(600);
+  h.ok('P: supply approvals lists DSP-00081 pending L1', (await h.count(p, S + ' tbody tr:has-text("DEMO-DSP-00081")')) === 1);
+  await p.click(S + ' tbody tr:has-text("DEMO-DSP-00081")'); await p.waitForTimeout(600);
   h.ok('P: L1 approver sees Accept on level 1 only', (await h.count(p, S + ' button:has-text("Accept")')) === 1 && await h.has(p, S, 'SAP-prefilled data') && await h.has(p, S, 'Stretch Wrap Film'));
   await p.screenshot({ path: h.SHOTS + '/p-supply-detail.png' });
   await p.click(S + ' button:has-text("Accept")'); await p.waitForTimeout(600);
   h.ok('P: after L1 → pending level 2, L2 not mine', await h.has(p, S, 'Pending Level 2') && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide'));
-  await actAs(p, 'Sana Ahmed'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
+  await actAs(p, 'Sana Ahmed'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' tbody tr:has-text("DEMO-DSP-00081")'); await p.waitForTimeout(500);
   h.ok('P: L2 approver can accept', (await h.count(p, S + ' button:has-text("Accept")')) === 1 && !(await h.has(p, S, 'Simulate SAP GR')));
   await p.click(S + ' button:has-text("Accept")'); await p.waitForTimeout(600);
   h.ok('P: fully approved → awaiting SAP, not posted', await h.has(p, S, 'Approved · awaiting SAP') && await h.has(p, S, 'Awaiting goods receipt in SAP') && await h.has(p, S, 'Not available from SAP'));
-  await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' button:has-text("All submissions")'); await p.waitForTimeout(300); await p.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await p.waitForTimeout(500);
+  await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Supply'); await p.click(S + ' button:has-text("All submissions")'); await p.waitForTimeout(300); await p.click(S + ' tbody tr:has-text("DEMO-DSP-00081")'); await p.waitForTimeout(500);
   await p.click(S + ' button:has-text("Simulate SAP GR confirmation")'); await p.waitForTimeout(600);
   h.ok('P: simulated GR confirmation → ready for invoice with SAP doc', await h.has(p, S, 'Ready for invoice') && await h.has(p, S, 'Goods receipt posted') && await h.has(p, S, '/ 2026'));
   await goTo(p, 'Activity', 'Audit & contact logs');
   const A = '[data-screen-label="08 Audit & Contact Logs"]';
-  await p.fill(A + ' input[placeholder^="Search action"]', 'PARCO-DSP-00081'); await p.waitForTimeout(400);
+  await p.fill(A + ' input[placeholder^="Search action"]', 'DEMO-DSP-00081'); await p.waitForTimeout(400);
   h.ok('P: audit has L1, L2 and SAP events for the dispatch', (await h.count(p, A + ' tbody tr')) >= 4 && await h.has(p, A, 'simulated SAP event'));
   await p.close();
 }
@@ -155,7 +155,7 @@ async function sodAndServices(ctx, h) {
   const p = await h.open(ctx, 'admin.html'); await reset(p);
   await actAs(p, 'Hassan Malik'); await goTo(p, 'Approvals', 'Services');
   const S = '[data-screen-label="08 Service Approvals"]';
-  await p.click(S + ' tbody tr:has-text("PARCO-SRV-000112")'); await p.waitForTimeout(500);
+  await p.click(S + ' tbody tr:has-text("DEMO-SRV-000112")'); await p.waitForTimeout(500);
   h.ok('P: SoD — Hassan already decided L1, cannot act on L2', (await h.count(p, S + ' button:not(.dis):has-text("Accept")')) === 0 && (await h.count(p, S + ' .ux-dr-foot button.dis:has-text("Accept")')) === 1 && await h.has(p, S, 'Only Sana Ahmed (Demo) can decide') && await h.has(p, S, 'Client Request Number'));
   await actAs(p, 'Ayesha Khan'); await goTo(p, 'Approvals', 'Services');
   h.ok('P: client requests table lists 3 CRs', (await p.locator(S + ' table').nth(1).locator('tbody tr').count()) === 3);
@@ -170,7 +170,7 @@ async function sodAndServices(ctx, h) {
   await p.click(M + ' tbody tr:has-text("SVC-MECH-01")'); await p.waitForTimeout(400);
   h.ok('P: SAP-owned service read-only with 2 eligible vendors', await h.has(p, M, 'SAP-owned master record') && (await h.count(p, M + ' a:has-text("V-1000")')) === 2);
   await p.click(M + ' button:has-text("Add service")'); await p.fill(M + ' label:has-text("Service name") input', 'Heliport Maintenance (Demo)'); await p.click(M + ' button:has-text("Save")'); await p.waitForTimeout(500);
-  h.ok('P: PARCO-added service labelled and listed', (await h.count(p, M + ' tbody tr')) === nSvc + 1 && await h.has(p, M, 'Heliport Maintenance'));
+  h.ok('P: DEMO-added service labelled and listed', (await h.count(p, M + ' tbody tr')) === nSvc + 1 && await h.has(p, M, 'Heliport Maintenance'));
   await p.screenshot({ path: h.SHOTS + '/p-services-master.png' });
   await p.close();
 }
@@ -255,7 +255,7 @@ async function supplierSupplyAndServices(ctx, h) {
   h.ok('S: one Workflow screen with SAP documents, Supply and Services tabs (Both capability)', (await h.count(p, T + ' [role=tab]')) === 3 && await h.has(p, T, 'Supply dispatches') && await h.has(p, T, 'Service work'));
   await p.click(T + ' [role=tab]:has-text("Supply dispatches")'); await p.waitForTimeout(800);
   const S = '[data-screen-label="03 Supply Workflow"]';
-  h.ok('S: existing dispatch listed pending L1', await h.has(p, S + ' tbody tr:has-text("PARCO-DSP-00081")', 'Pending Level 1'));
+  h.ok('S: existing dispatch listed pending L1', await h.has(p, S + ' tbody tr:has-text("DEMO-DSP-00081")', 'Pending Level 1'));
   await p.click(S + ' button:has-text("New dispatch")'); await p.waitForTimeout(300);
   await p.click(S + ' button:has-text("PO 4500012345")'); await p.waitForTimeout(300);
   h.ok('S: PO lines prefilled from SAP read-only', await h.has(p, S, 'Stretch Wrap Film') && (await h.text(p, S)).toLowerCase().includes('undelivered'));
@@ -263,27 +263,27 @@ async function supplierSupplyAndServices(ctx, h) {
   h.ok('S: over-quantity flagged', (await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').evaluate(e => getComputedStyle(e).borderColor)) === 'rgb(194, 65, 12)');
   await p.locator(S + ' tbody tr:has-text("Pallet Labels") input').fill('2000'); await p.fill(S + ' input[placeholder="e.g. DN-58940"]', 'DN-58940'); await p.click(S + ' button:has-text("Add file")'); await p.waitForTimeout(200);
   await p.click(S + ' button:has-text("Submit dispatch for PARCO approval")'); await p.waitForTimeout(800);
-  h.ok('S: dispatch submitted and detail shows two-person approval pending L1', await h.has(p, S, 'PARCO-DSP-00082') && await h.has(p, S, 'Level 1 · Hassan Malik') && await h.has(p, S, 'Awaiting decision'));
+  h.ok('S: dispatch submitted and detail shows two-person approval pending L1', await h.has(p, S, 'DEMO-DSP-00082') && await h.has(p, S, 'Level 1 · Hassan Malik') && await h.has(p, S, 'Awaiting decision'));
   await p.screenshot({ path: h.SHOTS + '/s-supply-detail.png' });
   await p.click(T + ' [role=tab]:has-text("Service work")'); await p.waitForTimeout(800);
   const V = '[data-screen-label="03 Services Workflow"]';
   h.ok('S: services shows enabled services and 2 client requests', await h.has(p, V, 'Equipment Inspection') && (await p.locator(V + ' table').nth(0).locator('tbody tr').count()) === 2 && await h.has(p, V, 'Mehmoodkot'));
   await p.click(V + ' button:has-text("Service Invoice")'); await p.waitForTimeout(300);
-  await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-999999'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. DEMO-CR-000412"]', 'DEMO-CR-999999'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   h.ok('S: wrong PARCO reference stops the vendor', await h.has(p, V, 'reference number is incorrect') && (await h.count(p, V + ' button:has-text("Submit for PARCO approval")')) === 0);
-  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000413'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.fill(V + ' input[placeholder="e.g. DEMO-CR-000412"]', 'DEMO-CR-000413'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   h.ok('S: reference for another service is rejected', await h.has(p, V, 'not the service you selected'));
-  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'parco-cr-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
-  h.ok('S: correct reference unlocks the order with SAP PO data', await h.has(p, V, 'Reference verified · PARCO-CR-000412') && await h.has(p, V, '4500012388 / 00020'));
+  await p.fill(V + ' input[placeholder="e.g. DEMO-CR-000412"]', 'parco-cr-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  h.ok('S: correct reference unlocks the order with SAP PO data', await h.has(p, V, 'Reference verified · DEMO-CR-000412') && await h.has(p, V, '4500012388 / 00020'));
   h.ok('S: ATL defaults to the PARCO record and asks which WHT applies', await h.has(p, V, 'Which withholding tax applies'));
   await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(300);
-  h.ok('S: ATL vendor must choose a WHT category', (await p.evaluate(() => PARCO.load().submissions.filter(s => s.crId === 'PARCO-CR-000412').length)) === 0);
+  h.ok('S: ATL vendor must choose a WHT category', (await p.evaluate(() => PARCO.load().submissions.filter(s => s.crId === 'DEMO-CR-000412').length)) === 0);
   await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S2'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(800);
-  h.ok('S: service order stores ATL declaration and WHT', JSON.stringify(await p.evaluate(() => { const s = PARCO.load().submissions.find(x => x.crId === 'PARCO-CR-000412'); return s && [s.atlDeclared, s.wht.code, s.wht.rate]; })) === '[true,"WHT-S2",0.11]');
-  h.ok('S: concurrent service submission created while supply pending', await h.has(p, V, 'PARCO-SRV-000113') && await h.has(p, V, 'Level 1 · Hassan Malik'));
+  h.ok('S: service order stores ATL declaration and WHT', JSON.stringify(await p.evaluate(() => { const s = PARCO.load().submissions.find(x => x.crId === 'DEMO-CR-000412'); return s && [s.atlDeclared, s.wht.code, s.wht.rate]; })) === '[true,"WHT-S2",0.11]');
+  h.ok('S: concurrent service submission created while supply pending', await h.has(p, V, 'DEMO-SRV-000113') && await h.has(p, V, 'Level 1 · Hassan Malik'));
   await p.close();
   const a = await h.open(ctx, 'admin.html'); await goTo(a, 'Approvals', 'Supply');
-  h.ok('A: admin sees the new dispatch pending Level 1', await h.has(a, '[data-screen-label="08 Supply Approvals"]', 'PARCO-DSP-00082'));
+  h.ok('A: admin sees the new dispatch pending Level 1', await h.has(a, '[data-screen-label="08 Supply Approvals"]', 'DEMO-DSP-00082'));
   await reset(a); await a.close();
 }
 async function supplierInvoiceAttributionAndProfile(ctx, h) {
@@ -382,7 +382,7 @@ module.exports = Object.assign(module.exports, { tableSearchAndFilters });
 async function taxRulesAndLockedApproval(ctx, h) {
   const a = await h.open(ctx, 'admin.html'); await reset(a); await a.reload(); await a.waitForTimeout(2500);
   await goTo(a, 'Approvals', 'Supply'); const S = '[data-screen-label="08 Supply Approvals"]';
-  await a.click(S + ' tbody tr:has-text("PARCO-DSP-00081")'); await a.waitForTimeout(600);
+  await a.click(S + ' tbody tr:has-text("DEMO-DSP-00081")'); await a.waitForTimeout(600);
   h.ok('P: non-assigned user sees locked Accept/Reject and a demo switch', (await h.count(a, S + ' .ux-dr-foot button.dis')) === 2 && await h.has(a, S + ' .ux-dr-foot', 'Switch to Hassan'));
   await a.click(S + ' .ux-dr-foot button:has-text("Switch to Hassan")'); await a.waitForTimeout(600);
   h.ok('P: after switching, the assigned approver can decide', (await h.count(a, S + ' .ux-dr-foot button:not(.dis):has-text("Accept")')) === 1 && await h.has(a, 'header', 'Hassan Malik'));
@@ -472,7 +472,7 @@ async function fullFlowNewVendor(ctx, h) {
   ok('F: SAP documents are empty for the new vendor (no SAP sync yet)', !(await h.has(p, 'body', 'NIS-INV-2026-0871')));
   await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(600); const V = '[data-screen-label="03 Services Workflow"]';
   await p.click(V + ' tbody tr:has-text("' + cr.id + '") button:has-text("Create service order")'); await p.waitForTimeout(300);
-  await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', cr.id); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.fill(V + ' input[placeholder="e.g. DEMO-CR-000412"]', cr.id); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   ok('F: non-ATL vendor sees the non-ATL withholding note', await h.has(p, V, 'Not on the ATL'));
   await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(700);
   const sub = await p.evaluate(() => PARCO.load().submissions.filter(s => s.vendorId === 'V-1000242')[0]);
@@ -520,7 +520,7 @@ async function sapPosRerouteAndProfilePicker(ctx, h) {
   await a.locator(RT + ' .rt-card').nth(0).locator('select').nth(0).selectOption('u-bilal'); await a.locator(RT + ' .rt-card').nth(0).locator('button:has-text("Save routing")').click(); await a.waitForTimeout(300);
   ok('M: routing shows open approvals still with the old approver', await h.has(a, RT, 'still with a different approver'));
   await a.locator(RT + ' .rt-card').nth(0).locator('button:has-text("Move them to these approvers")').click(); await a.waitForTimeout(300);
-  ok('M: open approvals moved to the new Level 1', await a.evaluate(id => PARCO.load().tasks.find(t => t.submissionId === id && t.level === 1).approverId, dsp.id) === 'u-bilal' && await a.evaluate(() => PARCO.load().tasks.find(t => t.submissionId === 'PARCO-DSP-00081' && t.level === 1).approverId) === 'u-bilal');
+  ok('M: open approvals moved to the new Level 1', await a.evaluate(id => PARCO.load().tasks.find(t => t.submissionId === id && t.level === 1).approverId, dsp.id) === 'u-bilal' && await a.evaluate(() => PARCO.load().tasks.find(t => t.submissionId === 'DEMO-DSP-00081' && t.level === 1).approverId) === 'u-bilal');
   // approve, SAP confirm → goods receipt posted on the PO
   await a.evaluate(id => { const d = PARCO.load(); const t1 = d.tasks.find(t => t.submissionId === id && t.level === 1); PARCO.decideApproval(t1.id, t1.submissionVersion, 'APPROVE', 'APP', t1.approverId, ''); const t2 = PARCO.load().tasks.find(t => t.submissionId === id && t.level === 2); PARCO.decideApproval(t2.id, t2.submissionVersion, 'APPROVE', 'APP', t2.approverId, ''); PARCO.confirmSap(id, 'u-ayesha'); }, dsp.id);
   ok('M: SAP goods receipt adds the received quantity to the PO', await a.evaluate(no => PARCO.posFor('V-1000242').find(p => p.no === no).lines[0].rec, pos[0]) === 5);
@@ -537,7 +537,7 @@ async function sapPosRerouteAndProfilePicker(ctx, h) {
   await p.locator(C + ' :text("check_box_outline_blank")').first().click().catch(() => {}); await p.waitForTimeout(150);
   await p.locator(C + ' button:has-text("Submit")').last().click(); await p.waitForTimeout(600);
   const inv = await p.evaluate(() => PARCO.load().invoices.find(i => i.id === 'PQ-INV-0001'));
-  ok('M: vendor invoice for a generated PO reaches PARCO Finance', !!inv && inv.vendorId === 'V-1000242' && inv.po === pos[0], JSON.stringify(inv && inv.status));
+  ok('M: vendor invoice for a generated PO reaches Demo Finance', !!inv && inv.vendorId === 'V-1000242' && inv.po === pos[0], JSON.stringify(inv && inv.status));
   ok('M: invoiced quantity is recorded on the PO', await p.evaluate(no => PARCO.posFor('V-1000242').find(p => p.no === no).lines[0].inv, pos[0]) === 5);
   await p.close();
   // vendor profile: searchable service picker
@@ -582,9 +582,9 @@ async function atlWhtAndVendorOrders(ctx, h) {
   ok('W: dispatch stores "not on ATL" with the non-ATL goods rate', !!dsp && dsp.atlDeclared === false && dsp.wht && dsp.wht.code === 'WHT-G1' && dsp.wht.rate === 0.11);
   // service order with WHT
   await p.click('[role=tab]:has-text("Service work")'); await p.waitForTimeout(500); const V = '[data-screen-label="03 Services Workflow"]';
-  await p.click(V + ' button:has-text("Service Invoice")'); await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. PARCO-CR-000412"]', 'PARCO-CR-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
+  await p.click(V + ' button:has-text("Service Invoice")'); await p.locator(V + ' .ux-drawer select').first().selectOption('SVC-INSP-03'); await p.fill(V + ' input[placeholder="e.g. DEMO-CR-000412"]', 'DEMO-CR-000412'); await p.click(V + ' button:has-text("Verify reference")'); await p.waitForTimeout(250);
   await p.locator(V + ' .ux-drawer select').nth(1).selectOption('WHT-S1'); await p.fill(V + ' input[placeholder="e.g. 250000"]', '250000'); await p.click(V + ' button:has-text("Upload invoice PDF")'); await p.click(V + ' button:has-text("Add file")'); await p.click(V + ' button:has-text("Submit for PARCO approval")'); await p.waitForTimeout(600);
-  const so = await p.evaluate(() => PARCO.load().submissions.find(s => s.crId === 'PARCO-CR-000412'));
+  const so = await p.evaluate(() => PARCO.load().submissions.find(s => s.crId === 'DEMO-CR-000412'));
   await p.close();
   const a = await h.open(ctx, 'admin.html'); await a.waitForTimeout(300);
   // vendor list shows service orders
@@ -614,7 +614,7 @@ async function vendorRecord(ctx, h) {
   const tabs = (await a.locator(V + ' .vr-tabs button').allInnerTexts()).join('|');
   ok('V: record has related-list tabs', ['Overview', 'Service orders', 'Supply dispatches', 'Client requests', 'Purchase orders', 'Invoices', 'People & access', 'Activity'].every(t => tabs.includes(t)), tabs);
   await a.click(V + ' .vr-kpi:has-text("Client requests")'); await a.waitForTimeout(300);
-  ok('V: client requests list with the reference used by each order', await h.has(a, V, 'PARCO-CR-000412') && await h.has(a, V, 'PARCO-SRV-000110'));
+  ok('V: client requests list with the reference used by each order', await h.has(a, V, 'DEMO-CR-000412') && await h.has(a, V, 'DEMO-SRV-000110'));
   await a.click(V + ' .vr-tabs button:has-text("Purchase orders")'); await a.waitForTimeout(300); await a.click(V + ' .vr-po .hd >> nth=0'); await a.waitForTimeout(200);
   ok('V: purchase order lines expand inside the record', await h.has(a, V, 'Pallet Labels A5'));
   await a.click(V + ' .vr-tabs button:has-text("Invoices")'); await a.waitForTimeout(300); await a.fill(V + ' .vr-bar input', '093'); await a.waitForTimeout(200);
@@ -631,7 +631,7 @@ async function serviceInvoiceSapFbr(ctx, h) {
   await p.click('.so-ref-chip'); await p.click('button:has-text("Verify reference")'); await p.waitForTimeout(300);
   await p.fill('.ux-drawer input[placeholder="e.g. 250000"]', '300000'); await p.click('button:has-text("Upload invoice PDF")');
   ok('F: service invoice shows amount with WHT and net payable', /300,000\.00 PKR/.test(await p.locator('.ux-drawer').innerText()));
-  const sid = await p.evaluate(() => { const d = PARCO.load(); const cr = d.clientRequests.find(c => c.id === 'PARCO-CR-000412'); const r = PARCO.createSubmission({ type: 'SERVICE', vendorId: 'V-1000236', actorName: 'Lena Marsh (Demo)', crId: cr.id, data: { crId: cr.id, serviceId: cr.serviceId, units: 2, uom: cr.uom, periodFrom: '2026-10-22', periodTo: '2026-10-28', evidence: ['r.pdf'], amount: 300000, currency: 'PKR', invoicePdf: 'Invoice-000412.pdf', atlDeclared: true, whtCode: 'WHT-S1' } }); return r.submission.id; });
+  const sid = await p.evaluate(() => { const d = PARCO.load(); const cr = d.clientRequests.find(c => c.id === 'DEMO-CR-000412'); const r = PARCO.createSubmission({ type: 'SERVICE', vendorId: 'V-1000236', actorName: 'Lena Marsh (Demo)', crId: cr.id, data: { crId: cr.id, serviceId: cr.serviceId, units: 2, uom: cr.uom, periodFrom: '2026-10-22', periodTo: '2026-10-28', evidence: ['r.pdf'], amount: 300000, currency: 'PKR', invoicePdf: 'Invoice-000412.pdf', atlDeclared: true, whtCode: 'WHT-S1' } }); return r.submission.id; });
   await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 1); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
   ok('F: Level 1 approval re-checks ATL with FBR', await p.evaluate(id => { const s = PARCO.byId(PARCO.load().submissions, id); return !!s.fbrAtl && s.history.some(x => /FBR ATL check/.test(x.what)); }, sid));
   await p.evaluate(id => { const t = PARCO.load().tasks.find(x => x.submissionId === id && x.level === 2); PARCO.decideApproval(t.id, 1, 'APPROVE', 'APP', t.approverId, ''); }, sid);
