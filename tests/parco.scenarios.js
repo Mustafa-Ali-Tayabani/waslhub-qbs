@@ -737,4 +737,26 @@ async function sapDataOnboarding(ctx, h) {
   ok('S2: SAP vendor preview shows the review page', (await h.count(pv, MG + ' .rg-st')) === 0 && await h.has(pv, MG, 'no form to fill in'));
   await pv.close(); await v.close(); await a.close();
 }
-module.exports = Object.assign(module.exports, { vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap, sapDataOnboarding });
+async function ksaFormReviewPipeline(ctx, h) {
+  const ok = h.ok;
+  const v = await h.open(ctx, 'index.html'); await reset(v); await v.goto(v.url().split('?')[0] + '?prototype=1&onboarding=ONB-00041&channel=portal'); await v.waitForTimeout(2500);
+  const MG = '[data-screen-label="01 Onboarding · Magic Link"]';
+  await v.click(MG + ' button:has-text("Fill sample data")'); await v.waitForTimeout(300);
+  ok('K: sample data is Saudi (KSA) based', await h.has(v, MG, 'Commercial Registration Number') && await v.evaluate(() => { const d = PARCO.regSample('ONB-00041'); return d.country === 'SA' && d.b0_iban.indexOf('SA') === 0 && Object.keys(PARCO.regErrors(d)).length === 0; }));
+  await v.click(MG + ' .rg-st:has-text("Review")'); await v.click(MG + ' .rg-ack'); await v.click(MG + ' button:has-text("Submit registration")'); await v.waitForTimeout(600);
+  const a = await h.open(ctx, 'admin.html');
+  ok('K: tenant is called Demo', await h.has(a, 'aside', 'Demo') && !(await h.has(a, 'body', 'PARCO — Pakistan')));
+  ok('K: home shows the 6-stage supplier lifecycle pipeline', (await h.count(a, '.pp-step')) === 6 && await h.has(a, '.pp-card', 'Award Portal') && await h.has(a, '.pp-card', 'Analytics Live Dashboard'));
+  await a.click('.pp-step:has-text("Supplier Onboarding")'); await a.waitForTimeout(400);
+  ok('K: pipeline stage opens its screen', await h.has(a, 'header', 'Vendors'));
+  await actAs(a, 'Hassan Malik'); await goTo(a, 'Approvals', 'Onboarding'); const OA = '[data-screen-label="08 Onboarding Approvals"]';
+  await a.click(OA + ' tbody tr:has-text("ONB-00041")'); await a.waitForTimeout(500);
+  await a.click(OA + ' .fv-open'); await a.waitForTimeout(400);
+  ok('K: approver opens the filled form with all sections', (await h.count(a, '.fv-sec')) === 6 && await h.has(a, '.fv', 'Riyadh') && await h.has(a, '.fv', 'Al Rajhi Bank'));
+  await a.click('.fv-f.doc:has-text("Signed NDA") button:has-text("Verify")'); await a.waitForTimeout(300);
+  ok('K: documents can be verified from the form view', await h.has(a, '.fv-top', '1 of 6') && await a.evaluate(() => PARCO.regDocList(PARCO.byId(PARCO.load().onboarding, 'ONB-00041')).find(x => x.key === 'nda').verified));
+  await a.keyboard.press('Escape'); await a.waitForTimeout(300);
+  ok('K: Esc closes the form view', (await h.count(a, '.fv')) === 0);
+  await a.close(); await v.close();
+}
+module.exports = Object.assign(module.exports, { ksaFormReviewPipeline, vendorRecord, serviceInvoiceSapFbr, supplierRegistration, poInvoiceApproval, newVendorNotInSap, sapDataOnboarding });
