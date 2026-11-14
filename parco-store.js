@@ -124,7 +124,7 @@
     ev(T('2026-10-27', '14:05'), { actorType: 'VENDOR', actor: 'Nadia Hussain (Demo)', vendorId: 'V-1000235', action: 'Onboarding accepted', entityType: 'ONBOARDING', entityId: 'ONB-00040', channel: 'PORTAL', source: 'Magic link' });
     ev(T('2026-10-28', '11:20'), { actorType: 'PARCO', actor: 'u-ayesha', vendorId: 'V-1000237', action: 'Invitation sent (portal + email)', entityType: 'ONBOARDING', entityId: 'ONB-00041', channel: 'APP', source: 'Admin' });
     ev(T('2026-10-28', '12:00'), { actorType: 'PARCO', actor: 'u-ayesha', vendorId: 'V-1000235', action: 'Contact logged (CALL): missing STRN follow-up', entityType: 'CONTACT', entityId: 'C-02', channel: 'APP', source: 'Admin' });
-    ev(T('2026-10-28', '16:30'), { actorType: 'VENDOR', actor: 'Lena Marsh (Demo)', vendorId: 'V-1000236', action: 'Supply dispatch DEMO-DSP-00081 submitted (PO 4500012345)', entityType: 'SUBMISSION', entityId: 'DEMO-DSP-00081', channel: 'APP', source: 'Supplier Portal' });
+    ev(T('2026-10-28', '16:30'), { actorType: 'VENDOR', actor: 'Lena Marsh (Demo)', vendorId: 'V-1000236', action: 'Advance Shipping Notification DEMO-DSP-00081 submitted (PO 4500012345)', entityType: 'SUBMISSION', entityId: 'DEMO-DSP-00081', channel: 'APP', source: 'Supplier Portal' });
     ev(T('2026-10-29', '09:10'), { actorType: 'PARCO', actor: 'u-ayesha', vendorId: 'V-1000237', action: 'Reminder sent for ONB-00041 to Tariq Baig (Demo) · EMAIL · Simulated', entityType: 'ONBOARDING', entityId: 'ONB-00041', channel: 'EMAIL', source: 'Admin' });
     A.reverse();
     return db;
@@ -375,7 +375,7 @@
   function defaultRoles() { return [
     { id: 'PARCO_ADMIN', label: 'Demo Admin', desc: 'Full access. Invites and activates vendors, maintains master data, users and roles.', perms: allPerms(), locked: true },
     { id: 'PARCO_FINANCE', label: 'Demo Finance', desc: 'Reviews invoices, records ATL and tax rules, follows payments.', perms: ['onboarding', 'vendors', 'poinv', 'finance', 'payments', 'notifications', 'audit', 'monitoring', 'sap', 'taxes', 'vendors.all', 'finance.process', 'tax.rules', 'audit.export', 'setup.taxes'] },
-    { id: 'PARCO_APPROVER_1', label: 'Demo Approver 1', desc: 'Level 1 approver for supply dispatches and service work.', perms: ['supply', 'services', 'poinv', 'onbappr', 'vendors', 'notifications', 'audit', 'vendors.all'] },
+    { id: 'PARCO_APPROVER_1', label: 'Demo Approver 1', desc: 'Level 1 approver for advance shipping notifications and service work.', perms: ['supply', 'services', 'poinv', 'onbappr', 'vendors', 'notifications', 'audit', 'vendors.all'] },
     { id: 'PARCO_APPROVER_2', label: 'Demo Approver 2', desc: 'Level 2 approver; never the same person as Level 1.', perms: ['supply', 'services', 'poinv', 'onbappr', 'vendors', 'notifications', 'audit', 'vendors.all'] },
     { id: 'CONCERNED_PERSON', label: 'Concerned Person / Vendor Relationship Officer', desc: 'Looks after assigned vendors and uploads invoices on their behalf.', perms: ['assigned', 'vendors', 'notifications', 'audit', 'onbehalf'] }]; }
   function roles() { var d = load(); if (!d.roles) { d.roles = defaultRoles(); } return d.roles; }
@@ -449,7 +449,7 @@
     var t2 = { id: 'T-' + d.seq.task + '-2', submissionId: s.id, submissionVersion: 1, level: 2, approverId: approversFor(v.id, p.type)[2], status: 'WAITING', dueOn: null, decision: null };
     d.tasks.push(t1, t2);
     if (p.type === 'SERVICE') { var cr2 = byId(d.clientRequests, p.crId); if (cr2) cr2.status = 'SUBMITTED'; }
-    log({ actorType: 'VENDOR', actor: p.actorName, vendorId: v.id, action: (p.type === 'SUPPLY' ? 'Supply dispatch ' : 'Service submission ') + s.id + ' submitted' + (p.type === 'SUPPLY' ? ' (PO ' + s.po + ')' : ' (' + s.crId + ')') + ' · routed to Level 1 ' + actorName(t1.approverId), entityType: 'SUBMISSION', entityId: s.id, channel: 'APP', source: 'Supplier Portal' });
+    log({ actorType: 'VENDOR', actor: p.actorName, vendorId: v.id, action: (p.type === 'SUPPLY' ? 'Advance Shipping Notification ' : 'Service submission ') + s.id + ' submitted' + (p.type === 'SUPPLY' ? ' (PO ' + s.po + ')' : ' (' + s.crId + ')') + ' · routed to Level 1 ' + actorName(t1.approverId), entityType: 'SUBMISSION', entityId: s.id, channel: 'APP', source: 'Supplier Portal' });
     persist(); return { ok: true, submission: s, task: t1 };
   }
   function decideApproval(taskId, submissionVersion, decision, channel, actorId, reason) {
